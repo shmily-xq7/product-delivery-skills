@@ -34,7 +34,6 @@
 
 横向支撑：`product-ui-spec`（双主题 token + 组件规格）、`product-prototype`（ASCII 线框 / HTML 原型 / 页面复刻）、`product-doc-convert`（docx↔Markdown↔Excel 互转脚本）。
 
-元技能：`prompt-kit-to-skills`（这套 skill 族本身的整理方法论，含实测陷阱清单）。
 
 ## 核心设计
 
@@ -49,7 +48,7 @@
 把各 skill 目录复制到你所用 AI 助手的用户级技能目录（下称 `<skills_dir>`）：
 
 ```bash
-cp -R product-* prompt-kit-to-skills <skills_dir>/
+cp -R product-* <skills_dir>/
 ```
 
 使用时直接说触发词即可（如「写产品设计文档」「模块详细设计」「需求访谈」「项目能不能交付」）；不知道从哪开始就说「走完整产品交付流程」，由编排器 `product-workflow` 路由。
@@ -68,7 +67,6 @@ product-diagnosis/      # ⑥ 诊断
 product-ui-spec/        # 横向：界面设计规范（tokens.css 双主题 token）
 product-prototype/      # 横向：原型（ASCII 规范 / HTML / 复刻）
 product-doc-convert/    # 横向：文档格式转换（scripts/*.py）
-prompt-kit-to-skills/   # 元技能：提示词工具包 → skill 族的整理方法论
 ```
 
 > 本仓库内容为私有方法论沉淀，未附开源许可证。
