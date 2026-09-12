@@ -1,0 +1,193 @@
+/* ============================================================================
+ * tokens.css —— B 端后台界面设计 token（浅色 / 深色双主题）
+ * ----------------------------------------------------------------------------
+ * 单一事实源：所有颜色、间距、圆角、字号、层级、阴影都以 CSS 自定义属性表达。
+ * 两套主题共用同一组变量名，只在取值上不同 —— 切换主题不需要改任何组件代码。
+ *
+ * 用法：
+ *   <html data-theme="light"> 或 <html data-theme="dark">
+ *   组件里只写 var(--xxx)，禁止硬编码色值。
+ * 改品牌色：只覆盖 :root 与 [data-theme="dark"] 中的 --color-primary 五支
+ *   （--color-primary / -hover / -active / -subtle / -border）
+ *   --color-info 三支已写成它的别名，会自动跟随，无需单独覆盖。
+ * ========================================================================== */
+
+/* ------------------------------------------------------------------ 浅色主题 */
+:root,
+[data-theme="light"] {
+  /* 背景与表面 */
+  --color-bg:              #f6f7f9;
+  --color-bg-sunken:       #eef0f3;
+  --color-surface:         #ffffff;
+  --color-surface-hover:   #fafbfc;
+  --color-surface-active:  #f1f3f6;
+
+  /* 描边 */
+  --color-border:          #e3e6ea;
+  --color-border-strong:   #cfd4db;
+  --color-border-subtle:   #eef0f3;
+
+  /* 文字 */
+  --color-text-primary:    #1f2329;
+  --color-text-secondary:  #646a73;
+  --color-text-tertiary:   #8f959e;
+  --color-text-disabled:   #bbbfc4;
+  --color-text-inverse:    #ffffff;
+
+  /* 品牌主色 */
+  --color-primary:         #2b5cd9;
+  --color-primary-hover:   #1f4cc0;
+  --color-primary-active:  #17409f;
+  --color-primary-subtle:  #eef2fd;
+  --color-primary-border:  #b9c9f5;
+
+  /* 语义色（前景 / 浅底 / 描边 三支成组） */
+  --color-success:         #1f9d55;
+  --color-success-subtle:  #e9f7ef;
+  --color-success-border:  #b0e0c4;
+
+  --color-warning:         #b8791a;
+  --color-warning-subtle:  #fdf4e3;
+  --color-warning-border:  #f0d9a8;
+
+  --color-error:           #d64545;
+  --color-error-subtle:    #fdecec;
+  --color-error-border:    #f5bcbc;
+
+  /* info 是主色的「别名」——换品牌色时自动跟随，无需单独覆盖 */
+  --color-info:            var(--color-primary);
+  --color-info-subtle:     var(--color-primary-subtle);
+  --color-info-border:     var(--color-primary-border);
+
+  /* 中性（用于次要标签、占位） */
+  --color-neutral:         #646a73;
+  --color-neutral-subtle:  #f1f3f6;
+  --color-neutral-border:  #d8dce1;
+
+  /* 阴影 */
+  --shadow-sm:  0 1px 2px rgba(31, 35, 41, 0.06);
+  --shadow-md:  0 4px 12px rgba(31, 35, 41, 0.08);
+  --shadow-lg:  0 12px 32px rgba(31, 35, 41, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(43, 92, 217, 0.18);
+}
+
+/* ------------------------------------------------------------------ 深色主题 */
+[data-theme="dark"] {
+  --color-bg:              #16181d;
+  --color-bg-sunken:       #111317;
+  --color-surface:         #1e2126;
+  --color-surface-hover:   #242830;
+  --color-surface-active:  #2a2f38;
+
+  --color-border:          #333740;
+  --color-border-strong:   #454a55;
+  --color-border-subtle:   #262a31;
+
+  --color-text-primary:    #e8eaed;
+  --color-text-secondary:  #a1a7b3;
+  --color-text-tertiary:   #737a86;
+  --color-text-disabled:   #4d525b;
+  --color-text-inverse:    #16181d;
+
+  --color-primary:         #5b83f0;
+  --color-primary-hover:   #7495f3;
+  --color-primary-active:  #8ea9f6;
+  --color-primary-subtle:  rgba(91, 131, 240, 0.14);
+  --color-primary-border:  rgba(91, 131, 240, 0.40);
+
+  --color-success:         #34b364;
+  --color-success-subtle:  rgba(52, 179, 100, 0.14);
+  --color-success-border:  rgba(52, 179, 100, 0.36);
+
+  --color-warning:         #d9a03a;
+  --color-warning-subtle:  rgba(217, 160, 58, 0.14);
+  --color-warning-border:  rgba(217, 160, 58, 0.36);
+
+  --color-error:           #e2646a;
+  --color-error-subtle:    rgba(226, 100, 106, 0.14);
+  --color-error-border:    rgba(226, 100, 106, 0.36);
+
+  /* info 是主色的「别名」——换品牌色时自动跟随，无需单独覆盖 */
+  --color-info:            var(--color-primary);
+  --color-info-subtle:     var(--color-primary-subtle);
+  --color-info-border:     var(--color-primary-border);
+
+  --color-neutral:         #a1a7b3;
+  --color-neutral-subtle:  rgba(161, 167, 179, 0.12);
+  --color-neutral-border:  rgba(161, 167, 179, 0.28);
+
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.48);
+  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.56);
+  --shadow-focus: 0 0 0 3px rgba(91, 131, 240, 0.28);
+}
+
+/* ------------------------------------------------------------ 与主题无关的 token */
+:root {
+  /* 间距 —— 4px 基准刻线，布局主节奏取 8 的倍数 */
+  --space-2:  2px;
+  --space-4:  4px;
+  --space-8:  8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
+
+  /* 圆角 */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   16px;
+  --radius-pill: 999px;
+
+  /* 字号 */
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;   /* 正文默认 */
+  --font-size-16: 16px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-size-32: 32px;
+
+  /* 行高与字重 */
+  --line-height-tight:  1.3;
+  --line-height-normal: 1.5;
+  --line-height-loose:  1.7;
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:    700;
+
+  /* 字体栈 */
+  --font-cn:  "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  --font-en:  "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* 布局骨架 */
+  --shell-side-width:     232px;  /* 侧边导航展开宽 */
+  --shell-side-collapsed:  56px;  /* 侧边导航折叠宽 */
+  --shell-top-height:      56px;  /* 顶栏高 */
+  --content-padding:       24px;  /* 内容区内边距 */
+  --page-header-height:    48px;  /* 页头高 */
+  --row-height:            48px;  /* 表格行高 */
+  --row-height-compact:    36px;  /* 紧凑模式行高 */
+
+  /* 层级 */
+  --z-sticky:    10;
+  --z-topbar:    20;
+  --z-dropdown: 100;
+  --z-drawer:  1000;
+  --z-modal:   1000;
+  --z-toast:   1100;
+  --z-tooltip: 1200;
+
+  /* 动效 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   300ms;
+}
