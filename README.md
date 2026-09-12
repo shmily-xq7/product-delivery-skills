@@ -45,7 +45,16 @@
 
 ## 安装
 
-把各 skill 目录复制到你所用 AI 助手的用户级技能目录（下称 `<skills_dir>`）：
+**一键安装**（克隆后运行安装脚本，自动复制到 AI 助手的技能目录 `<skills_dir>`，旧版自动备份）：
+
+```bash
+git clone https://github.com/shmily-xq7/product-delivery-skills && cd product-delivery-skills && bash install.sh
+```
+
+> 不方便用 git 的：在 GitHub 页面 **Code → Download ZIP**，解压后进入目录运行 `bash install.sh`，效果相同。
+> 自定义目标目录：`WORKBUDDY_SKILLS_DIR=~/你的目录 bash install.sh`。
+
+或手动复制各 skill 目录：
 
 ```bash
 cp -R product-* <skills_dir>/
