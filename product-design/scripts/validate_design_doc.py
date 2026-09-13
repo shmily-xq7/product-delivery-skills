@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-validate_design_doc.py —— 产品设计文档门禁硬校验器
+validate_design_doc.py —— 产品设计文档阶段检查器
 
 把《product-design》SKILL.md 的「强约束」从"AI 人工查"升级为"脚本硬查"。
 扫描一份产品设计文档，输出 PASS / WARN / FAIL 报告；存在 FAIL 时退出码为 1，
-可直接用于门禁阻断。
+可直接用于阶段检查阻断。
 
 用法:
     python3 validate_design_doc.py --doc <路径>/00_产品设计文档.md
@@ -495,7 +495,7 @@ def render_text(all_findings):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="产品设计文档门禁硬校验器")
+    ap = argparse.ArgumentParser(description="产品设计文档阶段检查器")
     ap.add_argument("--doc", required=True, nargs="+",
                     help="待校验的设计文档路径（支持多个，支持 shell 通配）")
     ap.add_argument("--json", action="store_true", help="输出机读 JSON")

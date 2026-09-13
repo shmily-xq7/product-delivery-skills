@@ -2,7 +2,7 @@
 name: product-design
 description: "产出《产品设计文档》——产品交付链路的第①阶段。覆盖前置子流程（需求说明 → 设计初始化大纲 → 功能清单拆解）与主体（业务流程 Mermaid、页面清单、每页/弹窗的基本信息、概述、数据流、ASCII 布局、字段字典、交互矩阵、验收标准 AC 编号、全局检查）。触发词：写产品设计、产品设计文档、写需求说明、设计初始化、拆功能清单、页面清单、字段字典、交互矩阵、验收标准、AC 编号、页面字段规格。输入是用户已确认的 原始需求.md；**确认前的需求访谈与澄清不负责（那是 product-requirement）**，技术选型与表结构也不负责（那是功能架构设计）。"
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   agent_created: true
 ---
 
@@ -37,7 +37,7 @@ metadata:
 
 **①②③ 不单独建文件** —— 它们的产出统一作为 `项目战术执行/00_产品设计文档.md` 的**前置章节**（见第 5 节结构）。理由：一条链路只产出一份文档，评审、移交与归档都只需看一个文件，避免出现 4 个"半个文档"。
 
-前置章节**按需出现**：材料齐备就写全，不齐就留白或整章省略，**不设门禁**（校验脚本只检查主体章节）。范例 `references/sample-user-management.md` 的开头四章就是「② 设计初始化（版本 B）+ 主体」合并的实例，可直接对照。
+前置章节**按需出现**：材料齐备就写全，不齐就留白或整章省略，**不设阶段检查**（校验脚本只检查主体章节）。范例 `references/sample-user-management.md` 的开头四章就是「② 设计初始化（版本 B）+ 主体」合并的实例，可直接对照。
 
 原始需求统一取自 `项目战略规划/原始需求.md`。
 
@@ -62,7 +62,7 @@ metadata:
 3. **每个页面 / 弹窗尽量 ≤ 2 张表** —— 即「字段字典」+「交互矩阵」。超出说明你把并列信息拆错了层级。
 4. **每个页面/弹窗必须有验收标准（AC）** —— 编号形如 `AC-USER-01`，2–8 位大写模块缩写 + 两位序号，**全文唯一**；用编号列表承载，**不要另开表格**（否则突破第 3 条）。编号规则与写法见 `references/product-design-spec.md` 第 6 节。
 
-**哪些是脚本校验的、哪些靠人工** —— 别把「人工守则」误当成「门禁」：
+**哪些是脚本校验的、哪些靠人工** —— 别把「人工守则」误当成「阶段检查」：
 
 | 规则 | 校验项 | 强度 |
 |---|---|---|
@@ -91,9 +91,9 @@ metadata:
 # 【前置章节 · 按需】①②③ 的产出并在这里，不单独建文件
 #   标题随所选模板（见 references/design-init.md、
 #   references/requirement-spec.md、references/function-list-breakdown.md）；
-#   材料不足可整章省略。此段无门禁校验。
+#   材料不足可整章省略。此段不参与阶段检查。
 
-# 【主体章节 · 必需】以下四章有门禁校验
+# 【主体章节 · 必需】以下四章需要通过阶段检查
 ## 业务流程            ← Mermaid 图，含异常分支
 ## 页面清单            ← 表格
 ## 功能设计详情
@@ -113,7 +113,7 @@ metadata:
 
 **「验收标准」的位置与形态**：页面级放页面小节末尾；弹窗/抽屉/步骤/子 tab 各自在自己的小节内附一份。**用编号列表，不用表格**——写法和编号规则见 `references/product-design-spec.md` 第 6 节。
 
-## 6. 门禁自检清单
+## 6. 阶段检查清单
 
 产出后逐项确认，任一项不过即视为未完成：
 
@@ -136,7 +136,7 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 
 ## 7. 范例
 
-`references/sample-user-management.md` 是一份**用本规范产出的完整范例**（用户管理模块），仅作为历史排版参考，不作为新任务的默认起点——但先读它顶部的「范例说明」：它的**排版是合规的**（页面主体 2 张表、每个弹窗各 2 张表），但成文早于 AC 体系，因此跑门禁只剩 `C14`（全文无 AC 编号）一个 FAIL，属预期行为。
+`references/sample-user-management.md` 是一份**用本规范产出的完整范例**（用户管理模块），仅作为历史排版参考，不作为新任务的默认起点——但先读它顶部的「范例说明」：它的**排版是合规的**（页面主体 2 张表、每个弹窗各 2 张表），但成文早于 AC 体系，因此运行阶段检查时只剩 `C14`（全文无 AC 编号）一个 FAIL，属预期行为。
 
 **AC 的写法样例**以 `references/product-design-spec.md` 的输出样例为准（`AC-USER-01` 起那一组），那份样例已按当前规范写全，可直接照抄结构。
 
@@ -150,7 +150,7 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 | `references/function-list-breakdown.md` | 功能清单拆解方法论（子阶段 ③） |
 | `references/agent-product-designer.md` | 产品设计专家角色定义（含技能与输出要求） |
 | `references/sample-user-management.md` | **完整范例输出** |
-| `scripts/validate_design_doc.py` | 门禁硬校验脚本 |
+| `scripts/validate_design_doc.py` | 阶段检查脚本 |
 
 **外部依赖**（同族 skill）
 - `product-requirement/references/expression-principles.md` —— 表达原则（结论先行 / 三步说清），归阶段⓪ 需求沟通名下（它是对用户沟通的方法论，本阶段 ②设计初始化成稿时同样遵守）
@@ -158,6 +158,6 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 - `product-prototype/references/ascii-ui-generator.md` —— 所有 ASCII 布局图
 - `product-ui-spec` —— 所有视觉规格（配色/字号/间距/组件）
 
-## 结构门禁补充
+## 结构检查补充
 
 缺少核心内容不能以 WARN 放行。使用完整技能包的 Mermaid 解析器检查语法；不适用的数据库/API/前端须按 `product-workflow/references/verification-contract.md` 写具体 N/A 理由。语法通过不证明业务语义或旧版渲染效果正确。

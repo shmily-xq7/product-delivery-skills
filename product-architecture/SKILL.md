@@ -2,7 +2,7 @@
 name: product-architecture
 description: "产出《功能架构设计文档》——产品交付链路第二阶段。从产品设计文档推导总体技术方案：需求解读、用户故事、功能模块拆解、架构风格、前后端与数据库选型、Mermaid 系统架构图、开发规范（命名/API/迁移）、后端模块树、表定义与 ER 图、前端组件树、方案自检。触发词：功能架构设计、定架构、总体技术方案、技术选型、系统分层、模块拆解、架构图、ER 图、API 命名规范。不负责单模块的详细设计（那是模块详细设计）。"
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   agent_created: true
 ---
 
@@ -67,9 +67,9 @@ metadata:
 
 **来源复核后盖章**：运行 `product-workflow/scripts/check_freshness.py --stamp <本文档路径>`。指纹覆盖上游完整正文（不含自动元信息）；规则、字段等正文变化也需复核。先判断影响，再决定改文档或更新来源记录，不自动重做全链。
 
-## 5. 门禁自检清单
+## 5. 阶段检查清单
 
-**先说清哪些是脚本查的、哪些靠人工** —— 别把「人工守则」误当成「门禁」：
+**先说清哪些是脚本查的、哪些靠人工** —— 别把「人工守则」误当成「阶段检查」：
 
 | 自检项 | 承担者 |
 |---|---|
@@ -119,7 +119,7 @@ python3 scripts/validate_arch_doc.py \
 |---|---|
 | `references/overall-design-spec.md` | **主规范**（角色 / 工作流程 / 开发规范 / 功能设计 / 完整输出样例） |
 | `references/agent-system-architect.md` | 系统架构师角色定义 |
-| `scripts/validate_arch_doc.py` | **门禁硬校验脚本**（A1–A6；只做高置信结构检查，判断类内容不在此列） |
+| `scripts/validate_arch_doc.py` | **阶段检查脚本**（A1–A6；只做高置信结构检查，判断类内容不在此列） |
 
 > **Mermaid 规范不在本 skill 内**：`mermaid-guide.md` 已迁至 `product-workflow/references/`（跨阶段共享资源）。本 skill 的架构图 / ER 图**同样受它约束**，路径见规则 4 与下方「外部依赖」。
 
@@ -139,6 +139,6 @@ python3 scripts/validate_arch_doc.py \
 
 **判断口诀**：写「业务上要什么」→ 产品设计；写「系统上怎么装」→ 功能架构；写「这个模块具体长什么样」→ 模块详细设计。
 
-## 结构门禁补充
+## 结构检查补充
 
 缺少核心内容不能以 WARN 放行。使用完整技能包的 Mermaid 解析器检查语法；不适用的数据库/API/前端须按 `product-workflow/references/verification-contract.md` 写具体 N/A 理由。语法通过不证明业务语义或旧版渲染效果正确。

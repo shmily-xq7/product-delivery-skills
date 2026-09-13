@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-validate_module_doc.py —— 模块详细设计文档门禁校验器
+validate_module_doc.py —— 模块详细设计文档阶段检查器
 
 重点防的是**静默漂移**：模块设计声明的 AC 与产品设计文档对不上、或用例没覆盖到，
 这类问题不会有任何外部症状，只能靠脚本发现。
@@ -363,7 +363,7 @@ def render(all_findings):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="模块详细设计文档门禁校验器")
+    ap = argparse.ArgumentParser(description="模块详细设计文档阶段检查器")
     ap.add_argument("--module-doc", required=True, nargs="+",
                     help="模块详细设计文档路径（支持通配）")
     ap.add_argument("--design-doc", default=None, help="产品设计文档路径（AC 悬空检查用）")

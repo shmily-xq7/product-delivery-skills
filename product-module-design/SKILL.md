@@ -2,7 +2,7 @@
 name: product-module-design
 description: "产出单模块的《〈序号〉_〈模块名〉详细设计.md》——产品交付链路第三阶段。把功能架构设计落地到具体模块：引用对应的产品设计来源章节、列出本模块覆盖的 AC 验收标准编号、前端详细设计（代码结构/组件表/状态管理/伪代码）、后端详细设计（代码结构/DDL/ER 图/API 契约表/伪代码）、测试详细设计（用例表含对应 AC 编号）。触发词：模块详细设计、页面详细设计、某模块的接口契约、数据模型细化、DDL、表结构设计、测试用例表、模块覆盖哪些 AC。不负责整系统架构（那是功能架构设计）。"
 metadata:
-  version: "1.3.0"
+  version: "1.3.1"
   agent_created: true
 ---
 
@@ -38,7 +38,7 @@ metadata:
 
 - 在上游标题前加入稳定 `workflow:id` 标记，在项目 `product-workflow.json` 的 `module_sources` 声明本模块的产品与架构来源；共享权限/公共接口等真实依赖也要列入。具体格式见 `product-workflow/references/project-config.md`。
 - **本模块覆盖的 AC**：列出本模块实现的编号及承载位置。编号从上游提取，不得遗漏、自行新增或修改；字段定义与 AC 正文在源文档中维护。
-- 模块正文聚焦本模块技术决策、契约和测试。需要单文件评审时运行 `build_snapshot.py` 自动拼接来源原文，生成展示副本；不要把生成快照放回门禁输入目录。
+- 模块正文聚焦本模块技术决策、契约和测试。需要单文件评审时运行 `build_snapshot.py` 自动拼接来源原文，生成展示副本；不要把生成快照放回阶段检查的输入目录。
 - 来源变化先判断实际影响；只有需要更新的模块才修改并重新验证。不得仅更新 stamp 来掩盖未处理的变化。
 
 ### 二、前端详细设计
@@ -121,7 +121,7 @@ python3 scripts/validate_module_doc.py \
 | `references/module-design-spec.md` | **主规范**（角色 / 工作流程 / 前端·后端·测试详细设计规范 / 完整输出样例） |
 | `references/agent-module-architect.md` | 模块架构师角色定义（含技术栈基线声明） |
 | `references/swimlane-guide.md` | 泳道图规范 —— **可选（PlantUML 版）**。默认用 Mermaid 表达泳道（见 `product-workflow/references/mermaid-guide.md`）；仅在项目已统一 PlantUML 或需其特有渲染时使用本文件。泳道**语义规范**（角色分泳道、动作"动词+宾语"、决策写"问题?"、每个结束分支必须 stop、同一时刻唯一当前处理人）始终适用 |
-| `scripts/validate_module_doc.py` | **门禁硬校验脚本**（M1–M6；重点防 AC 静默漂移） |
+| `scripts/validate_module_doc.py` | **阶段检查脚本**（M1–M6；重点防 AC 静默漂移） |
 
 **外部依赖**（同族 skill）
 - `product-design` / `product-architecture` —— 上游输入
@@ -139,6 +139,6 @@ python3 scripts/validate_module_doc.py \
 | 设计做完了，E2E 却不知道测什么 | 模块设计没有承接 AC，测试用例凭感觉写 | 在「本模块覆盖的 AC」里显式列出编号，测试用例表补「对应 AC 编号」列 |
 | 模块设计里的 AC 编号和设计文档对不上 | 手抄编号出错，或上游改了没同步 | 编号一律从产品设计文档复制，禁止手打；对不上时回流上游确认 |
 
-## 结构门禁补充
+## 结构检查补充
 
 缺少核心内容不能以 WARN 放行。使用完整技能包的 Mermaid 解析器检查语法；不适用的数据库/API/前端须按 `product-workflow/references/verification-contract.md` 写具体 N/A 理由。语法通过不证明业务语义或旧版渲染效果正确。

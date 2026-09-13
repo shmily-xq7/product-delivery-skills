@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-validate_arch_doc.py —— 功能架构设计文档门禁校验器
+validate_arch_doc.py —— 功能架构设计文档阶段检查器
 
 只做**高置信、低误报**的结构性检查。判断类内容（方案是否合理、是否重复描述业务含义）
 不在本脚本范围，靠 `product-architecture/SKILL.md` 的人工自检清单。
@@ -341,7 +341,7 @@ def render(all_findings):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="功能架构设计文档门禁校验器")
+    ap = argparse.ArgumentParser(description="功能架构设计文档阶段检查器")
     ap.add_argument("--arch-doc", required=True, nargs="+", help="架构文档路径（支持通配）")
     ap.add_argument("--design-doc", default=None, help="产品设计文档路径（用于页面覆盖弱检查）")
     ap.add_argument("--json", action="store_true", help="输出机读 JSON")
