@@ -1,0 +1,1 @@
+{"name":"product-delivery-diagram-validator","version":"1.0.0","private":true,"type":"module","dependencies":{"mermaid":"11.12.2","jsdom":"26.1.0"}}

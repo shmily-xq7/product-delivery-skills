@@ -18,9 +18,9 @@ validate_design_doc.py —— 产品设计文档门禁硬校验器
     C3 FAIL Mermaid 代码块内无全角标点（参照 mermaid-guide.md）
     C4 FAIL 无「按钮/操作按钮」单独成表
     C5 FAIL 页面主体、以及每个弹窗/抽屉/步骤/tab，各自表格数 <= 2
-    C6 WARN 每个页面/弹窗应有「字段字典」
+    C6 FAIL 每个页面/弹窗应有「字段字典」
     C7 WARN 每个页面/弹窗应有 ASCII 布局图代码块
-    C8 WARN 每个页面/弹窗应有「交互矩阵」
+    C8 FAIL 每个页面/弹窗应有「交互矩阵」
     C9 WARN 越界内容检测（出现表结构 DDL / 技术选型字样提示移交架构阶段）
     C10 FAIL 页面线框图中不得混入 Unicode 框线字符（须用 ASCII 的 + - |）
     C11 FAIL 页面线框图中不得出现 emoji / 宽度不定的符号（单宽几何符号见 WIREFRAME_ALLOWED）
@@ -38,6 +38,10 @@ import json
 import os
 import re
 import sys
+
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'product-workflow/scripts'))
+from strict_docs import required, na, mermaid_errors, sections as strict_sections, meaningful, populated_tables
 
 # ---------------------------------------------------------------- 常量
 
@@ -335,6 +339,14 @@ def validate(path):
     text = read_text(path)
     plain = strip_fences(text)
 
+    for error in required(text, ['业务流程', '页面清单', '功能设计详情', '全局检查']):
+        findings.append(Finding('FAIL', 'C16', error, path))
+    from check_freshness import page_names
+    listed = page_names(plain)
+    detailed = [re.sub(r'^\d+[.、\s]*', '', title).strip() for title, _ in slice_page_sections(text)]
+    if not listed or len(listed) != len(set(listed)) or set(listed) != set(detailed) or len(detailed) != len(set(detailed)):
+        findings.append(Finding('FAIL', 'C17', '页面清单必须非空、唯一，并与页面详情名称一一对应：清单=%s，详情=%s' % (listed, detailed), path))
+
     # C1 必需章节
     heads = collect_headings(text)
     titles = [t for _lvl, t in heads]
@@ -356,6 +368,9 @@ def validate(path):
                     "FAIL", "C3",
                     "第 %d 个 Mermaid 代码块含全角标点：%s（参照 mermaid-guide.md）"
                     % (bi, " ".join(bad)), path))
+
+    for error in mermaid_errors(mermaid_blocks):
+        findings.append(Finding('FAIL', 'C18', error, path))
 
     # C4 按钮单独成表
     btn_tables = find_button_tables(plain)
@@ -381,9 +396,13 @@ def validate(path):
     # 页面级检查
     pages = slice_page_sections(text)
     if not pages:
-        findings.append(Finding("WARN", "C5", "未能识别出 `### <页面名称>` 形式的页面小节，跳过页面级检查", path))
+        findings.append(Finding("FAIL", "C5", "未能识别出 `### <页面名称>` 形式的页面小节，无法完成页面级检查，阻断", path))
 
     for title, body in pages:
+        for label in ('字段字典', '交互矩阵'):
+            matches = [content for heading, content in strict_sections(body) if label in heading]
+            if not matches or not all(populated_tables(content) > 0 for content in matches):
+                findings.append(Finding('FAIL', 'C19', '页面「%s」的%s须含实际表格内容' % (title, label), path))
         # C5 表格数（分作用域：页面主体 + 各弹窗/抽屉/步骤/tab 各自统计）
         for scope_name, n_tab in tables_by_scope(body):
             if n_tab > 2:
@@ -394,11 +413,11 @@ def validate(path):
 
         # C6 字段字典
         if "字段字典" not in body and "字段规格" not in body:
-            findings.append(Finding("WARN", "C6", "页面「%s」未见「字段字典」小节" % title, path))
+            findings.append(Finding("FAIL", "C6", "页面「%s」未见「字段字典」小节" % title, path))
 
         # C8 交互矩阵
         if "交互矩阵" not in body and "交互说明" not in body:
-            findings.append(Finding("WARN", "C8", "页面「%s」未见「交互矩阵」小节" % title, path))
+            findings.append(Finding("FAIL", "C8", "页面「%s」未见「交互矩阵」小节" % title, path))
 
         # C14 每个页面至少 1 条 AC
         page_ac, page_bad = collect_ac_ids(body)

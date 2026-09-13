@@ -1,76 +1,22 @@
-// ============================================================================
-// React 列表页配套样式（与同目录 UserManagement.tsx 成对使用）
-//
-// 说明：本文件只承载布局层面的样式。颜色 / 间距 / 圆角 / 字号一律取设计 token，
-//       不要在此硬编码色值（见《B 端后台界面设计规范》）。
-// ============================================================================
+// Import product-ui-spec/references/tokens.css once at the application entrypoint.
 .user-management-page {
-  height: 100%;
-  
+  padding: var(--content-padding);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-16);
+    margin-bottom: var(--space-16);
+  }
+  .filter-bar { margin: var(--space-16) 0; }
   .status-tag {
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    
-    &.status-active {
-      background-color: #f0f9ff;
-      color: #1e40af;
-      border: 1px solid #3b82f6;
-    }
-    
-    &.status-inactive {
-      background-color: #fef2f2;
-      color: #dc2626;
-      border: 1px solid #ef4444;
-    }
-  }
-  
-  .action-btn {
-    padding: 4px 8px;
-    margin-right: 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    background: white;
-    color: #374151;
-    cursor: pointer;
-    font-size: 12px;
-    
-    &:hover {
-      background-color: #f9fafb;
-    }
-    
-    &.danger {
-      color: #dc2626;
-      border-color: #ef4444;
-      
-      &:hover {
-        background-color: #fef2f2;
-      }
-    }
-  }
-  
-  .user-form {
-    .form-item {
-      margin-bottom: 16px;
-      
-      label {
-        display: inline-block;
-        width: 80px;
-        font-weight: 500;
-      }
-      
-      input {
-        width: 200px;
-        padding: 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        
-        &:focus {
-          outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-        }
-      }
-    }
+    padding: var(--space-2) var(--space-8);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-12);
+    color: var(--color-neutral);
+    background: var(--color-neutral-subtle);
+    border: 1px solid var(--color-neutral-border);
   }
 }

@@ -39,8 +39,8 @@ test.describe('【功能模块】测试', () => {
       console.log('\\n=== 步骤3: 数据验证 ===');
       await validateResults(page);
       
-    } catch (error) {
-      console.error(`❌ 测试执行失败: ${error.message}`);
+    } catch (error: unknown) {
+      console.error(`❌ 测试执行失败: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     } finally {
       // 测试分析和清理
@@ -50,21 +50,21 @@ test.describe('【功能模块】测试', () => {
 });
 
 function setupMonitoring(page: Page, messages: string[], requests: any[], responses: any[]) {
-  // 监控设置实现
+  throw new Error("尚未实现：监控设置实现")
 }
 
 async function navigateToPage(page: Page) {
-  // 页面导航实现
+  throw new Error("尚未实现：页面导航实现")
 }
 
 async function performUserInteractions(page: Page) {
-  // 用户交互实现
+  throw new Error("尚未实现：用户交互实现")
 }
 
 async function validateResults(page: Page) {
-  // 结果验证实现
+  throw new Error("尚未实现：结果验证实现")
 }
 
 function analyzeTestResults(messages: string[], requests: any[], responses: any[]) {
-  // 测试分析实现
+  throw new Error("尚未实现：测试分析实现")
 }

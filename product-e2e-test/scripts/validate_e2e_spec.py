@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-validate_e2e_spec.py —— E2E 用例的 AC 覆盖双向校验器
+validate_e2e_spec.py —— E2E 静态引用检查器（不证明实际执行）
 
 把「产品设计文档里的验收标准（AC）」和「Playwright 用例」对起来查，两个方向都看：
 
-    E1 FAIL 漏测：设计文档里有 AC，但没有任何用例引用它
+    E1 WARN 静态 E2E 未引用：实际覆盖由结项器读取单元/API/E2E 报告
     E2 FAIL 悬空：用例引用了设计文档里不存在的 AC 编号
     E3 FAIL 用例里的 AC 编号格式不合法（出现 AC- 前缀但不符合编号规则）
     E4 WARN 某个 spec 文件完全没有 AC 标注
-    E5 WARN 设计文档里一条 AC 也没有（文档可能还没写验收标准）
+    E5 FAIL 设计文档里一条 AC 也没有（文档可能还没写验收标准）
 
 编号规则（与 product-design 的 AC 规范一致）：
     AC-<2~8 位大写模块缩写>-<两位序号>，例如 AC-USER-01
@@ -29,12 +29,15 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "product-workflow" / "scripts"))
+from workflow_config import spec_files, DEFAULTS
 
 # —— 与 product-design 的 AC 编号规则保持同一套（此处自带一份，避免跨 skill 运行时耦合）——
 AC_VALID_RE = re.compile(r"AC-[A-Z][A-Z0-9]{1,7}-[0-9]{2}")
 AC_CANDIDATE_RE = re.compile(r"AC-[A-Za-z0-9\u4e00-\u9fff]+(?:-[A-Za-z0-9\u4e00-\u9fff]+)*")
 
-SPEC_EXTS = (".spec.ts", ".spec.tsx", ".spec.js", ".spec.jsx")
+SPEC_EXTS = DEFAULTS["spec_extensions"]
 
 
 class Finding:
@@ -62,18 +65,13 @@ def collect_ac_ids(text):
     return valid, invalid
 
 
-def find_spec_files(spec_dir):
-    if not os.path.isdir(spec_dir):
-        return None
-    hits = []
-    for ext in SPEC_EXTS:
-        hits.extend(glob.glob(os.path.join(spec_dir, "**", "*" + ext), recursive=True))
-    return sorted(set(hits))
+def find_spec_files(spec_dir, extensions=None):
+    return spec_files(spec_dir, extensions or SPEC_EXTS)
 
 
 # ---------------------------------------------------------------- 校验
 
-def validate(design_doc, spec_dir):
+def validate(design_doc, spec_dir, extensions=None):
     findings = []
 
     # 设计文档侧
@@ -84,23 +82,26 @@ def validate(design_doc, spec_dir):
     doc_set = set(doc_valid)
     if not doc_set:
         findings.append(Finding(
-            "WARN", "E5",
+            "FAIL", "E5",
             "设计文档《%s》里没有任何合法的 AC 编号 —— 请先在产品设计文档里补「验收标准」"
             % os.path.basename(design_doc)))
 
     # 用例侧
-    specs = find_spec_files(spec_dir)
+    specs = find_spec_files(spec_dir, extensions)
     if specs is None:
         findings.append(Finding("FAIL", "E0", "用例目录不存在：%s" % spec_dir))
         return findings
     if not specs:
-        findings.append(Finding("WARN", "E4", "用例目录下没有找到 *.spec.ts 文件：%s" % spec_dir))
+        findings.append(Finding("FAIL", "E4", "用例目录下没有找到 *.spec.ts 文件：%s" % spec_dir))
 
     ref_map = {}        # ac -> [文件]
     no_ac_files = []
     bad_tokens = {}     # 非法编号 -> [文件]
     for p in specs:
         txt = read_text(p)
+        executable = re.sub(r'/\*.*?\*/|//[^\n]*', '', txt, flags=re.S)
+        if not re.search(r'\b(?:test|it)(?:\.(?:only|skip|fixme|fail))?\s*\(', executable):
+            findings.append(Finding('FAIL', 'E6', '文件没有可识别的测试声明（注释不算测试）：' + os.path.basename(p)))
         valid, invalid = collect_ac_ids(txt)
         for a in set(valid):
             ref_map.setdefault(a, []).append(os.path.basename(p))
@@ -120,7 +121,7 @@ def validate(design_doc, spec_dir):
     missing = sorted(doc_set - set(ref_map))
     for a in missing:
         findings.append(Finding(
-            "FAIL", "E1", "漏测：设计文档定义了 %s，但没有任何用例引用它" % a))
+            "WARN", "E1", "静态 E2E 未引用 %s；是否已由单元/API/E2E 验证，须读取执行报告判断" % a))
 
     # E2 悬空
     dangling = sorted(set(ref_map) - doc_set)
@@ -137,7 +138,7 @@ def validate(design_doc, spec_dir):
     if not any(f.level == "FAIL" for f in findings):
         findings.append(Finding(
             "PASS", "OK",
-            "AC 覆盖双向校验通过：文档 %d 条 AC，用例引用 %d 条" % (len(doc_set), len(ref_map))))
+            "静态引用检查通过：文档 %d 条 AC，用例引用 %d 条；不代表执行通过或断言有效" % (len(doc_set), len(ref_map))))
     return findings
 
 
@@ -160,14 +161,15 @@ def render(findings, design_doc, spec_dir):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="E2E 用例的 AC 覆盖双向校验器")
+    ap = argparse.ArgumentParser(description="E2E 静态引用检查器（不证明实际执行）")
     ap.add_argument("--design-doc", required=True, help="产品设计文档路径（00_产品设计文档.md）")
     ap.add_argument("--spec-dir", required=True, help="Playwright 用例目录（frontend/tests/e2e）")
+    ap.add_argument("--extensions", nargs="+", default=SPEC_EXTS, help="测试扩展名；由项目配置统一提供")
     ap.add_argument("--json", action="store_true", help="输出机读 JSON")
     ap.add_argument("--quiet", action="store_true", help="只输出汇总")
     args = ap.parse_args(argv)
 
-    findings = validate(args.design_doc, args.spec_dir)
+    findings = validate(args.design_doc, args.spec_dir, args.extensions)
     fails = sum(1 for f in findings if f.level == "FAIL")
     warns = sum(1 for f in findings if f.level == "WARN")
     verdict = "FAIL" if fails else ("PASS(WARN)" if warns else "PASS")

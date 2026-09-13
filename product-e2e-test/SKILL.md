@@ -1,8 +1,9 @@
 ---
 name: product-e2e-test
 description: "产出 Playwright + TypeScript 的端到端测试用例——产品交付链路第五阶段。含测试架构（文件结构/常量）、用例与 AC 验收标准的对应与覆盖校验、三层监控（控制台日志/网络请求/页面错误）、步骤执行标准（步骤分层+等待策略+元素定位）、用户交互模拟（表单填写/复杂交互）、三层数据验证（前端/API/DB）、错误处理（异常捕获/重试/兜底）、报告分析，并附可直接复制的用例模板。触发词：写 E2E、端到端测试、Playwright 用例、功能测试脚本、回归测试、测试失败排查、AC 覆盖检查、验收标准没测到。不负责单元测试与设计文档。"
-version: "1.0.0"
-agent_created: true
+metadata:
+  version: "1.2.0-local.1"
+  agent_created: true
 ---
 
 # E2E 功能测试
@@ -32,11 +33,11 @@ test('AC-USER-03 删除用户：二次确认后该行消失', async ({ page }) =
 **硬要求**
 - 注释格式 `// AC-<模块缩写>-<两位序号>`，后接该条 AC 的原文或摘要
 - 用例名以 AC 编号开头 —— 失败时能直接定位到设计文档的哪一条
-- 一条 AC 可以对应多条用例（正向 + 异常），但**每条 AC 至少被 1 条引用**
+- 一条 AC 可以对应多条用例（正向 + 异常），但**每条 AC 至少由一项实际通过的单元/API/E2E 测试承接**
 - 引用的编号必须真实存在，不能凭印象编
 
 **双向门禁** —— `scripts/validate_e2e_spec.py` 同时查两个方向：
-- **漏测**：设计文档里有 AC，但没有任何用例引用它 → FAIL
+- **静态 E2E 未引用**：提示 WARN；实际覆盖由结项器读取单元/API/E2E 执行报告，未覆盖则阻断
 - **悬空**：用例引用了文档里不存在的 AC 编号 → FAIL
 
 ```bash
@@ -88,13 +89,13 @@ E2E 的价值不止"点通"，而在于**捕捉静默失败**。测试全程挂�
 
 `assets/templates/sample.spec.ts` —— Playwright + TS 用例骨架，三层监控、步骤分层、多兜底选择器、三层验证、AC 标注均已内置。
 
-**复制后必须替换**：`BASE_URL`、菜单/按钮文案、元素选择器、API 路径、数据库断言。模板中 `setupMonitoring` 等辅助函数需按项目实际补全。
+**复制后必须替换**：`BASE_URL`、菜单/按钮文案、元素选择器、API 路径、数据库断言。模板中 `setupMonitoring` 等必填函数默认抛出“尚未实现”，必须补全后才能通过；完整参考页面测试见 `product-development/assets/reference-app/tests/`。
 
 ## 9. 完成前自检清单
 
 - [ ] 用例覆盖设计文档测试用例表中的每个 E2E 场景
-- [ ] **每个用例都标注了它验证的 AC 编号（`// AC-XXX-NN`）**
-- [ ] **设计文档里的每条 AC 至少被 1 个用例引用**（跑 `scripts/validate_e2e_spec.py` 判 PASS）
+- [ ] **在实际测试名称中标注 AC 编号，或通过 ac_tests 映射实际 JUnit 测试身份**
+- [ ] **每条 AC 有实际通过的单元/API/E2E 测试承接**；静态引用检查不能替代执行报告
 - [ ] 三层监控已挂载，且测试结束有汇总输出
 - [ ] 无固定 `waitForTimeout`，全部改为状态等待
 - [ ] 关键元素使用多兜底选择器
@@ -111,10 +112,16 @@ E2E 的价值不止"点通"，而在于**捕捉静默失败**。测试全程挂�
 | `references/e2e-spec.md` | **主规范**（测试架构 / AC 对应 / 三层监控 / 步骤标准 / 交互模拟 / 数据验证 / 错误处理 / 报告分析 / 最佳实践 / 模板） |
 | `references/agent-e2e.md` | E2E 测试专家角色定义（Playwright + TS 工程能力） |
 | `assets/templates/sample.spec.ts` | 可直接复制的用例骨架 |
-| `scripts/validate_e2e_spec.py` | **AC 覆盖双向校验**（漏测 / 悬空） |
+| `scripts/validate_e2e_spec.py` | **静态引用检查**（悬空 / 测试声明）；运行覆盖由结项器读取报告 |
 
 **外部依赖**（同族 skill）
 - `product-module-design` —— 测试用例表的来源
 - `product-development` —— 被测代码的技术栈与选择器约定
 - `product-design/references/product-design-spec.md` —— AC 编号规则的来源（见其第 6 节）
 - `product-diagnosis` —— 用例持续失败时移交诊断
+
+**项目配置**：测试目录和扩展名由 `product-workflow.json` 统一指定；独立调用校验器时传入对应 `--spec-dir` / `--extensions`。依赖同族 workflow_config.py，共享文件发现逻辑，避免结项与单项检查统计不一致。
+
+## 运行证据
+
+按 `product-workflow/references/verification-contract.md` 配置 JUnit 报告并通过 run_checks.py 执行。报告必须来自本次运行；无测试、全部跳过、失败或陈旧证据不通过。AC 适合由单元或 API 测试验证时，不要求重复编写 E2E。

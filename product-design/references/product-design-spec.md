@@ -300,7 +300,7 @@
 - **E2E 测试**（`product-e2e-test`）：每条用例在注释中标注它验证的 AC 编号，如 `// AC-USER-01`
 - **门禁脚本**：
   - `product-design/scripts/validate_design_doc.py` —— 校验编号格式合法、全文唯一、每个页面至少 1 条（C12 / C13 / C14）
-  - `product-e2e-test/scripts/validate_e2e_spec.py` —— 校验每条 AC 至少被 1 个用例引用，且用例引用的 AC 必须存在
+  - `product-e2e-test/scripts/validate_e2e_spec.py` —— 检查静态引用与悬空编号；实际 AC 覆盖由结项器读取单元/API/E2E 执行报告
 
 # 工作流程
 

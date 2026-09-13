@@ -29,6 +29,10 @@ import os
 import re
 import sys
 
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'product-workflow/scripts'))
+from strict_docs import required, na, mermaid_errors, sections as strict_sections, meaningful, populated_tables
+
 # ---------------------------------------------------------------- 常量
 
 FENCE_RE = re.compile(r"^\s*```\s*([A-Za-z0-9_+-]*)\s*$")
@@ -142,7 +146,7 @@ def check_table_defs(plain, findings):
     name_idx = [(i, TABLE_NAME_RE.search(l)) for i, l in enumerate(lines) if TABLE_NAME_RE.search(l)]
     if not name_idx:
         findings.append(Finding(
-            "WARN", "A3",
+            "FAIL", "A3",
             "未识别到「表名:」形式的表定义块（数据库设计应逐表给出表名 / 所属模块 / 核心职责 / 字段定义 / 索引）"))
         return
 
@@ -154,7 +158,7 @@ def check_table_defs(plain, findings):
             findings.append(Finding("FAIL", "A3", "表 %s 缺「字段定义」" % tname))
             continue
         heads = [h for h, _ in tables_in(block)]
-        if not heads:
+        if not heads or not populated_tables(block):
             findings.append(Finding("FAIL", "A3", "表 %s 的「字段定义」下没有表格" % tname))
             continue
         ok = False
@@ -246,12 +250,12 @@ def check_page_coverage(design_doc, arch_text, findings):
     """A5 页面清单 ↔ 架构文档（弱版覆盖）"""
     names = design_page_names(design_doc)
     if names is None:
-        findings.append(Finding("WARN", "A5", "未能读取产品设计文档的「页面清单」，跳过覆盖检查"))
+        findings.append(Finding("FAIL", "A5", "未能读取产品设计文档的「页面清单」，跳过覆盖检查"))
         return
     missing = [n for n in names if n and n not in arch_text]
     for n in missing:
         findings.append(Finding(
-            "WARN", "A5",
+            "FAIL", "A5",
             "页面「%s」在产品设计文档的页面清单里，但架构文档中未出现 —— 确认它的模块/表/组件归属已写明" % n))
 
 
@@ -297,8 +301,15 @@ def validate(arch_doc, design_doc=None):
     plain = strip_fences(text)
     blocks = split_blocks(text)
 
+    for error in required(text, ['需求', '总体技术方案', '开发规范', '功能设计', '自检']):
+        findings.append(Finding('FAIL', 'A7', error))
+    for error in mermaid_errors([p[1] for k,p in blocks if k == 'fence' and p[0] == 'mermaid']):
+        findings.append(Finding('FAIL', 'A8', error))
+    if not na(plain, 'frontend') and not any(k == 'fence' and TREE_CHAR_RE.search(p[1]) and COMPONENT_FILE_RE.search(p[1]) for k,p in blocks):
+        findings.append(Finding('FAIL', 'A9', '缺少前端组件树；无前端时声明 N/A[frontend]: 具体理由'))
     check_mermaid(blocks, findings)
-    check_table_defs(plain, findings)
+    if not na(plain, 'database'):
+        check_table_defs(plain, findings)
     check_component_names(blocks, findings)
     check_er_consistency(blocks, plain, findings)
     if design_doc:

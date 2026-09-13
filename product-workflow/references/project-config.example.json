@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "paths": {
+    "requirement": "项目战略规划/原始需求.md",
+    "execution": "项目战术执行",
+    "design_name": "00_产品设计文档.md",
+    "architecture_name": "00_功能架构设计文档.md",
+    "frontend": "frontend",
+    "backend": "backend",
+    "e2e": "frontend/tests/e2e"
+  },
+  "spec_extensions": [
+    ".spec.ts",
+    ".spec.tsx",
+    ".spec.js",
+    ".spec.jsx"
+  ],
+  "stack": {
+    "frontend": "React + TypeScript + Ant Design",
+    "backend": "FastAPI + SQLAlchemy + PostgreSQL"
+  },
+  "commands": {
+    "typecheck": {
+      "cwd": "frontend",
+      "argv": [
+        "npx",
+        "tsc",
+        "--noEmit"
+      ]
+    },
+    "lint": {
+      "cwd": "frontend",
+      "argv": [
+        "npx",
+        "eslint",
+        "src",
+        "--max-warnings",
+        "0"
+      ]
+    },
+    "e2e": {
+      "cwd": "frontend",
+      "argv": [
+        "npx",
+        "playwright",
+        "test",
+        "--reporter=junit"
+      ],
+      "report": "junit"
+    },
+    "backend": {
+      "cwd": "backend",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "--junitxml={report}"
+      ],
+      "report": "junit"
+    }
+  },
+  "module_sources": {},
+  "exemptions": {},
+  "ac_tests": {}
+}

@@ -1,8 +1,9 @@
 ---
 name: product-development
 description: "按模块详细设计写代码——产品交付链路第四阶段（React 栈）。定义全族技术栈基线（单一事实源），提供 React 列表页 / 标签页的分步开发流程与可直接复制的整页模板（AntD + TS），覆盖前后端命名一致性、枚举单一事实源、后端 FastAPI 接口实现。触发词：按设计写代码、生成页面组件、React 列表页开发、标签页开发、对接 API、AntD 组件实现、前后端命名不一致。不负责写设计文档（那在前三个阶段）。"
-version: "1.0.0"
-agent_created: true
+metadata:
+  version: "1.2.0-local.1"
+  agent_created: true
 ---
 
 # 代码开发（React 栈）
@@ -10,7 +11,9 @@ agent_created: true
 > 定位：详细设计 → **可运行代码**。
 > 本 skill 同时承担**全族技术栈基线的唯一事实源**——其他 skill 遇到技术栈问题应引用此处，不得各自另立一套。
 
-## 1. 技术栈基线（单一事实源，勿自行变更）
+## 1. 默认技术栈基线
+
+项目根 `product-workflow.json` 的 paths / stack / commands 配置优先；默认值与执行方法见 `product-workflow/references/project-config.md`。复用已有项目技术栈，不能仅为符合示例而迁移项目。
 
 | 层 | 选型 | 备注 |
 |---|---|---|
@@ -40,7 +43,7 @@ agent_created: true
 │       │   ├── <Component>.tsx         ← 组件 / 页面文件（PascalCase）
 │       │   └── <component>.scss        ← 样式文件（kebab-case）
 │       ├── components/  api/  stores/  router/
-│       └── tests/e2e/<page-name>.spec.ts   ← E2E 用例（kebab-case）
+│   └── tests/e2e/<page-name>.spec.ts   ← E2E 用例（kebab-case）
 └── backend/                            ← 后端工程根
     └── app/                            ← 唯一源码根
         ├── api/v1/  core/  models/  schemas/  services/
@@ -72,13 +75,13 @@ agent_created: true
 
 ## 1.1 ④ 阶段门禁：跑项目自身的工具链，不另造检查器
 
-代码阶段的语言级检查**由项目自己的工具链承担**，本族**不为它写脚本** —— 再写一个 Python 脚本去 grep TS 代码，只会又慢又误报（它读不懂 import、类型标注与 JSX）。产出后**必须**依次跑：
+代码阶段的语言级检查**由项目自己的工具链承担**，本族**不为它写脚本** —— 再写一个 Python 脚本去 grep TS 代码，只会又慢又误报（它读不懂 import、类型标注与 JSX）。选择本次改动受影响的检查；正式交付核对范围内证据。下面命令独立从项目根执行，自定义路径通过 `product-workflow/scripts/run_checks.py` 按配置运行：
 
 ```bash
-cd frontend && npx tsc --noEmit                      # 类型检查：0 error 才算过
-cd frontend && npx eslint src --max-warnings 0       # lint
-cd frontend && npx playwright test                   # E2E（规范见 product-e2e-test）
-cd backend  && python -m pytest -q                   # 后端单测 / 集成测试
+(cd frontend && npx tsc --noEmit)                      # 类型检查：0 error 才算过
+(cd frontend && npx eslint src --max-warnings 0)       # lint
+(cd frontend && npx playwright test)                   # E2E（规范见 product-e2e-test）
+(cd backend && python -m pytest -q)                   # 后端单测 / 集成测试
 ```
 
 **门禁项对应的承担者**（不要靠人眼目检）：
@@ -117,9 +120,9 @@ cd backend  && python -m pytest -q                   # 后端单测 / 集成测�
 | 7 | 弹窗/表单：新增与编辑复用同一弹窗，字段按设计文档的字段字典 |
 | 8 | 检查清单：按钮配置、组件最佳实践、TS 类型、性能（第 9 章） |
 
-**可直接复制的整页骨架**：`assets/templates/UserManagement.tsx`（335 行，完整页面组件）+ `assets/templates/data-list-page.scss`（配套样式）。
+**可直接复制的骨架**：`assets/templates/UserManagement.tsx` + `UserListLayout.tsx` + `data-list-page.scss`。布局组件随模板提供，仅依赖 React 与 AntD；传入稳定的 `UserService` 实例连接真实 API。部门/状态来自 dictionaries，保存和删除等待真实 Promise 成功后刷新，失败保留错误与输入。按项目契约修改类型和字段，模板中无生产默认模拟数据。
 
-> ⚠️ **模板路径适配（复制后最关键的一步）**：模板里引用了 `@/components/layouts/FilterBarTablePageLayout`、`@/components/common/DialogWrapper`、`@/components/common/FilterFields`、`@/types` —— 这些是**布局组件层的导入约定，并非开箱可用**。复制到目标项目后，必须把它们指向目标项目实际的布局组件位置；若目标项目还没有这一层，请先按《列表页开发规范》第 2 章补齐，**不要在页面组件里内联铺布局**。
+**可运行参考工程**：`assets/reference-app/`。它通过独立的 demo-service 注入明确标识的内存演示数据，验证模板交互，不是业务后端实现。以 package-lock.json 固定依赖；进入该目录执行 `npm ci`、`npm run build`、`npm test`。浏览器测试需要本机 Playwright Chromium。复制生产模板时不要复制 demo-service；应用入口引入 `product-ui-spec/references/tokens.css` 并映射 AntD theme。
 
 ## 4. 标签页开发流程
 
@@ -130,7 +133,7 @@ cd backend  && python -m pytest -q                   # 后端单测 / 集成测�
 - 图标与菜单项有接口定义（`VerticalIconMenuItem`），配置项与标准值见规范 3.x。
 - 文件命名见规范 4.2；模块目录结构见 4.1 的完整步骤。
 
-**可直接复制的模板**：`assets/templates/TabsPage/index.tsx`（容器）、`routes.tsx`（路由配置）、`TabContent.tsx`（子页面）。
+**可直接复制的模板**：`assets/templates/TabsPage/index.tsx`（容器）、`routes.tsx`（路由工厂，显式传入 service）、`TabContent.tsx`（复用列表子页面）。三者按 templates 原目录结构复制，不再引用未提供的私有布局组件。
 
 > 另注：列表页规范第 11 章还提供了**扁平化多 Tab** 方案（用路由配置实现多 Tab 而非容器组件）。两方案对比见 11.6，选择时优先看目标项目既有约定。
 
@@ -164,7 +167,9 @@ cd backend  && python -m pytest -q                   # 后端单测 / 集成测�
 | `references/agent-frontend.md` | 前端工程师角色定义（已按 AntD 主线改写） |
 | `references/agent-backend.md` | 后端工程师角色定义（FastAPI + SQLAlchemy + PG） |
 | `references/backend-frontend-consistency.md` | 前后端枚举一致性策略（**参考思路，非强制规范**） |
-| `assets/templates/UserManagement.tsx` | 列表页整页骨架（可直接复制） |
+| `assets/templates/UserManagement.tsx` | 注入真实 service 的列表页骨架 |
+| `assets/templates/UserListLayout.tsx` | 随模板提供的 AntD 布局组件 |
+| `assets/reference-app/` | 隔离演示数据的可运行参考工程与交互测试 |
 | `assets/templates/data-list-page.scss` | 列表页配套样式 |
 | `assets/templates/TabsPage/index.tsx` | 标签页容器组件模板 |
 | `assets/templates/TabsPage/routes.tsx` | 标签页路由配置模板 |

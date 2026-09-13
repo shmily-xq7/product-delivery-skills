@@ -1,8 +1,9 @@
 ---
 name: product-doc-convert
 description: "本地文档格式互转工具（可运行 Python 脚本，跨阶段横向能力）。支持 docx/doc/docm → Markdown（保留表格与标题层级）、Markdown → docx（可指定中文字体）、表格型 docx → 结构化 docx、docx 标题层级 → Excel、三级列 Excel → 分级标题 Markdown。触发词：文档转 md、Word 转 Markdown、Markdown 转 Word、把表格做成 docx、docx 导出 excel、excel 转 md、格式转换。不负责文档内容撰写。"
-version: "1.0.0"
-agent_created: true
+metadata:
+  version: "1.2.0-local.1"
+  agent_created: true
 ---
 
 # 文档格式互转
@@ -24,8 +25,10 @@ agent_created: true
 | docx / docm / doc → Markdown | `scripts/convert_docx_to_markdown.py` | 保留表格与标题层级；`.doc` 需系统有 `textutil`（macOS）或 LibreOffice |
 | Markdown → docx | `scripts/markdown_to_docx.py` | 支持指定字体（`-f`，默认宋体）；保留标题层级与格式 |
 | 表格型 docx → 结构化 docx | `scripts/convert_table_to_structured_docx.py` | 表格内容 → 标题 + 正文，便于阅读 |
-| docx 标题层级 → Excel | `scripts/docx_to_excel.py` | 输出「层级 / 文本 / 内容」三列 |
-| 三级列 Excel → Markdown | `scripts/excel_to_markdown.py` | 按 Excel 层级列生成分级标题 |
+| docx 标题层级 → Excel | `scripts/docx_to_excel.py` | 输出「1级标题 … N级标题 / 正文内容」共 N+1 列，N 取文档最大标题层级 |
+| 三级列 Excel → Markdown | `scripts/excel_to_markdown.py` | 只读取前三列为一级/二级/三级标题；忽略其余列，且不保留正文 |
+
+**格式边界**：两支 Excel 工具不是通用往返转换。DOCX 导出的 N+1 列不能直接当作固定三列标题输入：层级少于三层时正文可能占据第三列；超过三层时第四层及正文会被忽略。进入 Excel → Markdown 前应明确整理为「一级/二级/三级标题」三列，正文另行处理。
 
 ## 3. 运行方式
 

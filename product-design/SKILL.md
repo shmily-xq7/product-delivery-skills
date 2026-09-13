@@ -1,14 +1,17 @@
 ---
 name: product-design
 description: "产出《产品设计文档》——产品交付链路的第①阶段。覆盖前置子流程（需求说明 → 设计初始化大纲 → 功能清单拆解）与主体（业务流程 Mermaid、页面清单、每页/弹窗的基本信息、概述、数据流、ASCII 布局、字段字典、交互矩阵、验收标准 AC 编号、全局检查）。触发词：写产品设计、产品设计文档、写需求说明、设计初始化、拆功能清单、页面清单、字段字典、交互矩阵、验收标准、AC 编号、页面字段规格。输入是用户已确认的 原始需求.md；**确认前的需求访谈与澄清不负责（那是 product-requirement）**，技术选型与表结构也不负责（那是功能架构设计）。"
-version: "1.0.0"
-agent_created: true
+metadata:
+  version: "1.2.0-local.1"
+  agent_created: true
 ---
 
 # 产品设计文档
 
 > 定位：把模糊业务需求转成**可交付、可验收**的产品设计文档。
 > 只做**业务侧**：业务流程、页面、字段、交互。**不碰**技术选型、表结构 DDL、服务分层、组件树——那是 `product-architecture` 的职责。
+
+项目路径与技术栈优先读取项目根 `product-workflow.json`；下文路径为默认示例，详见 `product-workflow/references/project-config.md`。
 
 ## 1. 何时使用
 
@@ -67,7 +70,7 @@ agent_created: true
 | 每个页面/弹窗 ≤2 张表 | `C5` | 脚本 FAIL（阻断） |
 | 页面/弹窗必须含「验收标准」 | `C14` | 脚本 FAIL（阻断） |
 | AC 编号格式合法 / 全文唯一 | `C12` / `C13` | 脚本 FAIL（阻断） |
-| 页面/弹窗应有「字段字典」 | `C6` | 脚本 WARN（**按需项，不阻断**） |
+| 页面/弹窗应有「字段字典」 | `C6` | 脚本 FAIL（须含实际表格内容） |
 | **字段规格只在一处出现** | **——** | **纯人工核对，无脚本** |
 
 > **关于第 2 条**：它**没有脚本校验**。原因是这条规则点名的场景是「页面概述、数据流里不得重复定义」——那是**散文**，要把「引用字段名」和「重复定义字段规格」可靠地区分开，正则做不到，强加检查只会大量误报。
@@ -133,7 +136,7 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 
 ## 7. 范例
 
-`references/sample-user-management.md` 是一份**用本规范产出的完整范例**（用户管理模块），可作为输出的对照标尺——但先读它顶部的「范例说明」：它的**排版是合规的**（页面主体 2 张表、每个弹窗各 2 张表），但成文早于 AC 体系，因此跑门禁只剩 `C14`（全文无 AC 编号）一个 FAIL，属预期行为。
+`references/sample-user-management.md` 是一份**用本规范产出的完整范例**（用户管理模块），仅作为历史排版参考，不作为新任务的默认起点——但先读它顶部的「范例说明」：它的**排版是合规的**（页面主体 2 张表、每个弹窗各 2 张表），但成文早于 AC 体系，因此跑门禁只剩 `C14`（全文无 AC 编号）一个 FAIL，属预期行为。
 
 **AC 的写法样例**以 `references/product-design-spec.md` 的输出样例为准（`AC-USER-01` 起那一组），那份样例已按当前规范写全，可直接照抄结构。
 
@@ -154,3 +157,7 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 - `product-workflow/references/mermaid-guide.md` —— 所有 Mermaid 图
 - `product-prototype/references/ascii-ui-generator.md` —— 所有 ASCII 布局图
 - `product-ui-spec` —— 所有视觉规格（配色/字号/间距/组件）
+
+## 结构门禁补充
+
+缺少核心内容不能以 WARN 放行。使用完整技能包的 Mermaid 解析器检查语法；不适用的数据库/API/前端须按 `product-workflow/references/verification-contract.md` 写具体 N/A 理由。语法通过不证明业务语义或旧版渲染效果正确。

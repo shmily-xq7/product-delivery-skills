@@ -13,7 +13,7 @@ validate_module_doc.py —— 模块详细设计文档门禁校验器
     M3 FAIL 每个接口块必须含 Endpoint / 请求参数 / 成功响应 / 错误响应 四块
     M4 FAIL 数据库设计必须有含 CREATE TABLE 的代码块，且块内出现索引声明
     M5 FAIL Mermaid 合规（无全角标点 / 不用 flowchart / 子图不用 direction）
-    M6 WARN 模块文档内 AC 编号重复 / 数据库 DDL 无注释 / 未识别到接口块 / 设计文档无 AC
+    M6 WARN 清单编号重复或 DDL 无注释；缺必需 AC/接口/数据库内容 FAIL
 
 用法:
     python3 validate_module_doc.py --module-doc <项目根>/项目战术执行/01_xxx详细设计.md
@@ -29,6 +29,10 @@ import json
 import os
 import re
 import sys
+
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'product-workflow/scripts'))
+from strict_docs import required, na, mermaid_errors, sections as strict_sections, meaningful
 
 # ---------------------------------------------------------------- 常量
 
@@ -188,7 +192,7 @@ def check_mermaid(blocks, findings):
     mer = [payload[1] for kind, payload in blocks
            if kind == "fence" and payload[0] == "mermaid"]
     if not mer:
-        findings.append(Finding("WARN", "M5", "未找到 ```mermaid 代码块（页面功能流程 / ER 图应为必需）"))
+        findings.append(Finding("FAIL", "M5", "未找到 ```mermaid 代码块（页面功能流程 / ER 图应为必需）"))
     for bi, body in enumerate(mer, 1):
         bad = sorted(set(ch for ch in body if ch in FULLWIDTH_CHARS))
         if bad:
@@ -250,8 +254,8 @@ def check_ac_consistency(plain, design_doc, findings):
                 if idx < len(r):
                     used |= set(collect_ac(r[idx])[0])
 
-    if not found_case_table and not declared:
-        findings.append(Finding("WARN", "M6", "未识别到「本模块覆盖的 AC」表或测试用例表，跳过 AC 一致性检查"))
+    if not found_case_table or not declared:
+        findings.append(Finding("FAIL", "M6", "未识别到「本模块覆盖的 AC」表或测试用例表，无法完成 AC 一致性检查，阻断"))
         return
 
     for a in sorted(declared - used):
@@ -267,7 +271,7 @@ def check_interfaces(plain, findings):
     lines = plain.split("\n")
     starts = [i for i, l in enumerate(lines) if INTERFACE_RE.match(l)]
     if not starts:
-        findings.append(Finding("WARN", "M6", "未识别到「- **接口N: 名称**」形式的接口块，跳过接口检查"))
+        findings.append(Finding("FAIL", "M6", "未识别到「- **接口N: 名称**」形式的接口块，无法完成接口检查，阻断"))
         return
     for k, i in enumerate(starts):
         end = starts[k + 1] if k + 1 < len(starts) else len(lines)
@@ -278,7 +282,8 @@ def check_interfaces(plain, findings):
         block = "\n".join(lines[i:end])
         title = re.sub(r"^\s*-\s*\*\*|\*\*.*$", "", lines[i]).strip() or lines[i].strip()[:24]
         for key in INTERFACE_REQUIRED:
-            if key not in block:
+            values = [line.split('|')[2].strip() for line in block.splitlines() if key in line and line.count('|') >= 2]
+            if key not in block or not any(meaningful(value.strip('`*')) for value in values):
                 findings.append(Finding(
                     "FAIL", "M3", "接口「%s」缺「%s」块 —— 契约表须含 Endpoint / 请求参数 / 成功响应 / 错误响应"
                     % (title, key)))
@@ -288,7 +293,7 @@ def check_ddl(text, findings):
     """M4 数据库设计必须有 CREATE TABLE + 索引声明"""
     ranges = heading_ranges(text, "数据库设计")
     if not ranges:
-        findings.append(Finding("WARN", "M6", "未识别到「数据库设计」小节，跳过 DDL 检查"))
+        findings.append(Finding("FAIL", "M6", "未识别到「数据库设计」小节，无法完成 DDL 检查，阻断"))
         return
 
     ddls = []
@@ -321,10 +326,16 @@ def validate(module_doc, design_doc=None):
     text = read_text(module_doc)
     plain = strip_fences(text)
 
+    for error in required(text, ['产品设计', '前端详细设计', '后端详细设计', '测试详细设计']):
+        findings.append(Finding('FAIL', 'M7', error))
+    for error in mermaid_errors([p[1] for k,p in split_blocks(text) if k == 'fence' and p[0] == 'mermaid']):
+        findings.append(Finding('FAIL', 'M8', error))
     check_mermaid(split_blocks(text), findings)
     check_ac_consistency(plain, design_doc, findings)
-    check_interfaces(plain, findings)
-    check_ddl(text, findings)
+    if not na(plain, 'api'):
+        check_interfaces(plain, findings)
+    if not na(plain, 'database'):
+        check_ddl(text, findings)
 
     if not any(f.level == "FAIL" for f in findings):
         findings.append(Finding("PASS", "OK", "全部硬性结构检查通过"))
