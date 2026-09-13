@@ -47,7 +47,7 @@
 
 ## 安装
 
-安装器采用开放的 Agent Skills 目录结构，不把工作流绑定到某一个智能体。要求 Python 3.9+、Node.js 20+ 和 npm；首次安装需联网下载 lockfile 固定版本的 Mermaid 语法解析器：
+安装器采用开放的 Agent Skills 目录结构，不把工作流绑定到某一个智能体。要求 Python 3.9+、Node.js 20+ 和 npm。仓库不打包 Mermaid 解析器及其 `node_modules`；每次安装时，安装器会在暂存目录运行 `npm ci`，从 npm registry 下载 `package-lock.json` 锁定的版本并完成自检，因此安装时需要网络可访问 npm registry：
 
 ```bash
 git clone https://github.com/shmily-xq7/product-delivery-skills
@@ -93,7 +93,7 @@ bash install.sh --all-detected
 
 `--all-detected` 是用户主动选择“全部已检测客户端”时的便利选项，只选择存在客户端标记目录的配置，并按真实路径去重。它不会自动选择 `codex-legacy`。多个目标逐个事务化安装；若后一个目标失败，前面已成功的目标保持新版本，终端会列出失败目标。
 
-对于支持客户端界面导入的场景，可以生成 11 个独立包。每个 ZIP 的根目录都有 `SKILL.md`，`product-workflow.zip` 还包含安装并自检过的 Mermaid 运行时：
+对于支持客户端界面导入的场景，可以显式生成 11 个独立包。每个 ZIP 的根目录都有 `SKILL.md`，`product-workflow.zip` 还包含安装并自检过的 Mermaid 运行时；这些是写入用户指定目录的临时交付物，默认不生成，也不纳入源码仓库：
 
 ```bash
 bash install.sh --export-packages ./dist/client-import
@@ -107,7 +107,7 @@ bash install.sh --target /自定义/skills --target /另一个项目/.agents/ski
 
 显式 `--app` 使用该客户端的覆盖变量；显式 `--target` 直接加入安装目标。没有命令行目标时，只有已经设置的通用变量 `AGENT_SKILLS_DIR`、`SKILLS_DIR` 或旧变量 `WORKBUDDY_SKILLS_DIR` 才会被视为用户选择；否则安装器停止并提示选择目标。目录和导入能力会随客户端版本变化，遇到企业版、国际版、多用户 Profile 或沙箱安装时，应以 `--list-apps` 和客户端实际目录为准，用对应环境变量或 `--target` 修正，而不是修改安装器源码。
 
-每个目标都先暂存并核验全部文件，再逐目录替换；替换期间出现可捕获异常会回滚。不是跨 11 个目录的操作系统级原子事务，断电/强杀应检查备份恢复。备份位于技能根的 `.product-delivery/backups/<唯一运行ID>/`，避免把旧版备份当作活动技能。`.product-delivery/manifest.json` 保存版本、客户端、目标、基准 commit、来源与逐文件 SHA-256；不复制源目录已有的依赖缓存或构建产物；Mermaid 运行时依照 package-lock 在暂存目录重建并自检。若进程异常退出留下 install.lock，先核对其中 pid 已不再运行，再移走锁并检查备份。
+每个目标都先暂存并核验全部文件，再逐目录替换；替换期间出现可捕获异常会回滚。不是跨 11 个目录的操作系统级原子事务，断电/强杀应检查备份恢复。备份位于技能根的 `.product-delivery/backups/<唯一运行ID>/`，避免把旧版备份当作活动技能。`.product-delivery/manifest.json` 保存版本、客户端、目标、基准 commit、来源与逐文件 SHA-256；源仓库中的依赖缓存和构建产物不会被复制，Mermaid 运行时会按照 package-lock 在暂存目录重新安装并自检。npm 缓存可能减少实际下载量，但不能作为离线安装保证。若进程异常退出留下 install.lock，先核对其中 pid 已不再运行，再移走锁并检查备份。
 
 `install.sh` 是 Python 安装器的入口，需与 scripts/install.py、release.json 和 11 个技能目录一起分发，不能单独复制它完成安装。可选文档转换依赖仍在隔离环境安装，不在安装技能时自动下载。
 
