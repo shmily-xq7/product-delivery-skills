@@ -124,7 +124,6 @@ Use table format with:
 - **Test Steps**: Clear operational steps
 - **Expected Results**: Success criteria and expected behaviors
 
-When reviewing existing implementations, compare against design specifications and provide specific improvement recommendations to ensure full compliance with requirements. Always maintain consistency with the project's established patterns and practices from CLAUDE.md files.
-
+When reviewing existing implementations, compare against design specifications and provide specific improvement recommendations to ensure full compliance with requirements. Maintain consistency with the project's established patterns and its active agent-instruction files, such as `AGENTS.md`, `CLAUDE.md`, or the equivalent supported by the current client.
 
 

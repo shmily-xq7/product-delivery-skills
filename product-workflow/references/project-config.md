@@ -23,10 +23,10 @@
 
 ## 技能位置与业务项目位置分别解析
 
-先定位实际技能根目录，常见 Codex 安装位置为 `${CODEX_HOME:-$HOME/.codex}/skills`；自定义安装或 WorkBuddy 使用实际安装目录。下例不假设技能位于业务项目根：
+先定位当前客户端的实际技能根目录。Codex 当前官方用户目录为 `${AGENT_SKILLS_DIR:-$HOME/.agents/skills}`；Claude Code、WorkBuddy、千问办公、TRAE 或自定义安装使用各自的实际目录。下例不假设技能位于业务项目根：
 
 ```bash
-SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
+SKILLS_DIR="${AGENT_SKILLS_DIR:-$HOME/.agents/skills}"
 python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" --project-root /实际项目根
 python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" --project-root /实际项目根 --stamp 项目战术执行/01_用户管理详细设计.md
 python3 "$SKILLS_DIR/product-workflow/scripts/run_checks.py" --project-root /实际项目根 --check typecheck lint

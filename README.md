@@ -1,6 +1,6 @@
 # product-delivery-skills
 
-版本：`1.2.0-local.1`（基于 a7f066c8，包含 F1–F9 工作流修复；保留已验证发行包的版本编号）。
+版本：`1.3.0`（包含 F1–F9 工作流修复及跨 Agent 安装支持）。
 
 产品交付链 skill 族：一条从**需求沟通**到**结项交付**的端到端工作流，含阶段门禁、AC 验收标准追溯、陈旧检测与结项判定。
 
@@ -47,24 +47,67 @@
 
 ## 安装
 
-**安装到 Codex（默认）**，要求 Python 3.9+、Node.js 20+ 和 npm；首次安装需联网下载固定版本 Mermaid 语法解析器：
+安装器采用开放的 Agent Skills 目录结构，不把工作流绑定到某一个智能体。要求 Python 3.9+、Node.js 20+ 和 npm；首次安装需联网下载 lockfile 固定版本的 Mermaid 语法解析器：
 
 ```bash
 git clone https://github.com/shmily-xq7/product-delivery-skills
 cd product-delivery-skills
-bash install.sh
+bash install.sh --list-apps
 ```
 
-上述安装命令安装当前仓库版本；也可以使用同版本的完整发行包。
+该命令只列出支持的客户端和实际路径。再由用户明确选择安装目标；无参数不会替用户默认选择某一个客户端。
+
+以下客户端可直接指定，也可以一次安装到多个客户端：
 
 ```bash
+bash install.sh --app claude-code
+bash install.sh --app codex
 bash install.sh --app workbuddy
-bash install.sh --target /自定义/skills
+bash install.sh --app qwen-office
+bash install.sh --app trae-work
+bash install.sh --app trae-cli
+bash install.sh --app dsh
+bash install.sh --app claude-code --app codex --app workbuddy --app qwen-office --app trae-work --app dsh
 ```
 
-`--target` 优先，其次 `SKILLS_DIR`、旧变量 `WORKBUDDY_SKILLS_DIR`，最后应用默认目录。Codex 默认采用 `${CODEX_HOME:-$HOME/.codex}/skills`。
+客户端配置如下。别名 `claude`、`qwenwork`、`traework`、`traecode`、`deepseek-harness` 也可使用。
 
-安装先暂存并核验全部文件，再逐目录替换；替换期间出现可捕获异常会回滚。不是跨 11 个目录的操作系统级原子事务，断电/强杀应检查备份恢复。备份位于技能根的 `.product-delivery/backups/<唯一运行ID>/`，避免把旧版备份当作活动技能。`.product-delivery/manifest.json` 保存版本、基准 commit、来源与逐文件 SHA-256；不复制源目录的依赖缓存或构建产物；Mermaid 运行时依照 package-lock 在暂存目录重建并自检。若进程异常退出留下 install.lock，先核对其中 pid 已不再运行，再移走锁并检查备份。
+| 客户端标识 | 默认用户级目录 | 单客户端覆盖变量 | 依据与限制 |
+|---|---|---|---|
+| `claude-code` | `~/.claude/skills` | `CLAUDE_SKILLS_DIR` | [Claude Code 官方 Skills 文档](https://code.claude.com/docs/en/skills) |
+| `codex` | `~/.agents/skills` | `AGENT_SKILLS_DIR` | [Codex 官方 Skills 文档](https://developers.openai.com/codex/skills) |
+| `codex-legacy` | `${CODEX_HOME:-~/.codex}/skills` | `CODEX_SKILLS_DIR` | 只用于升级旧安装，避免旧目录用户被静默迁移 |
+| `workbuddy` | `~/.workbuddy/skills` | `WORKBUDDY_SKILLS_DIR` | WorkBuddy 客户端兼容目录；格式见[官方技能文档](https://open.workbuddy.cn/docs/skill) |
+| `qwen-office` | `~/.qwenwork/skills` | `QWENWORK_SKILLS_DIR` | [千问办公官方 Skills 文档](https://www.alibabacloud.com/help/zh/qwenwork/skills) |
+| `trae-work` | `~/.trae-cn/skills` | `TRAE_SKILLS_DIR` | [TRAE Work 官方 Skills 文档](https://docs.trae.cn/work_skills) |
+| `trae-cli` | `~/.traecli/skills` | `TRAECLI_SKILLS_DIR` | [TraeCode CLI 官方 Skills 文档](https://docs.trae.cn/cli_skills) |
+| `dsh` | `${DSH_HOME:-~/.dsh}/skills` | `DSH_SKILLS_DIR` | [DSH 官方 Skills 文档](https://dsh.fish/docs/publish/skill)；目录保持 `<name>/SKILL.md` 一层结构 |
+
+先检查本机检测结果与实际写入位置，再执行批量安装：
+
+```bash
+bash install.sh --list-apps
+bash install.sh --all-detected --dry-run
+bash install.sh --all-detected
+```
+
+`--all-detected` 是用户主动选择“全部已检测客户端”时的便利选项，只选择存在客户端标记目录的配置，并按真实路径去重。它不会自动选择 `codex-legacy`。多个目标逐个事务化安装；若后一个目标失败，前面已成功的目标保持新版本，终端会列出失败目标。
+
+对于支持客户端界面导入的场景，可以生成 11 个独立包。每个 ZIP 的根目录都有 `SKILL.md`，`product-workflow.zip` 还包含安装并自检过的 Mermaid 运行时：
+
+```bash
+bash install.sh --export-packages ./dist/client-import
+```
+
+也可以重复 `--target` 支持任何兼容 Agent Skills 的客户端或项目级目录：
+
+```bash
+bash install.sh --target /自定义/skills --target /另一个项目/.agents/skills
+```
+
+显式 `--app` 使用该客户端的覆盖变量；显式 `--target` 直接加入安装目标。没有命令行目标时，只有已经设置的通用变量 `AGENT_SKILLS_DIR`、`SKILLS_DIR` 或旧变量 `WORKBUDDY_SKILLS_DIR` 才会被视为用户选择；否则安装器停止并提示选择目标。目录和导入能力会随客户端版本变化，遇到企业版、国际版、多用户 Profile 或沙箱安装时，应以 `--list-apps` 和客户端实际目录为准，用对应环境变量或 `--target` 修正，而不是修改安装器源码。
+
+每个目标都先暂存并核验全部文件，再逐目录替换；替换期间出现可捕获异常会回滚。不是跨 11 个目录的操作系统级原子事务，断电/强杀应检查备份恢复。备份位于技能根的 `.product-delivery/backups/<唯一运行ID>/`，避免把旧版备份当作活动技能。`.product-delivery/manifest.json` 保存版本、客户端、目标、基准 commit、来源与逐文件 SHA-256；不复制源目录已有的依赖缓存或构建产物；Mermaid 运行时依照 package-lock 在暂存目录重建并自检。若进程异常退出留下 install.lock，先核对其中 pid 已不再运行，再移走锁并检查备份。
 
 `install.sh` 是 Python 安装器的入口，需与 scripts/install.py、release.json 和 11 个技能目录一起分发，不能单独复制它完成安装。可选文档转换依赖仍在隔离环境安装，不在安装技能时自动下载。
 

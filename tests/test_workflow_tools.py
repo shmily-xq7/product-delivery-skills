@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'product-workflow/scripts'))
 import workflow_config as config
@@ -111,35 +112,40 @@ class InstallTests(unittest.TestCase):
         self.source=Path(self.temp.name).resolve()/'source';self.source.mkdir();self.target=Path(self.temp.name).resolve()/'目标 with spaces'
         (self.source/'release.json').write_text(json.dumps({'version':'test','base_commit':'base'}))
         for n in range(11):
-            d=self.source/('product-%02d'%n);d.mkdir();(d/'SKILL.md').write_text('old '+str(n))
+            name='product-%02d'%n;d=self.source/name;d.mkdir()
+            (d/'SKILL.md').write_text('---\nname: %s\ndescription: test skill\n---\nold %d'%(name,n))
     def install(self):
         with contextlib.redirect_stdout(io.StringIO()):installer.install(self.source,self.target)
     def test_repeat_install_records_version_and_hidden_backups(self):
         self.install();self.install()
         manifest=json.loads((self.target/'.product-delivery/manifest.json').read_text())
         self.assertEqual(len(manifest['skills']),11)
+        self.assertEqual(manifest['client'],'自定义目录')
         self.assertEqual(len(list(self.target.glob('product-*'))),11)
         self.assertEqual(len(list((self.target/'.product-delivery/backups').iterdir())),2)
         for name,content in manifest['skills'].items():self.assertEqual(content,installer.inventory(self.target/name))
     def test_failed_source_validation_preserves_installed_files(self):
         self.install();(self.source/'product-10/SKILL.md').unlink()
         with self.assertRaises(ValueError):self.install()
-        self.assertEqual((self.target/'product-10/SKILL.md').read_text(),'old 10')
+        self.assertTrue((self.target/'product-10/SKILL.md').read_text().endswith('old 10'))
     def test_mid_replacement_failure_rolls_back_entire_bundle(self):
         self.install();manifest=(self.target/'.product-delivery/manifest.json').read_bytes()
-        for p in self.source.glob('product-*/SKILL.md'):p.write_text('new')
+        for p in self.source.glob('product-*/SKILL.md'):
+            name=p.parent.name;p.write_text('---\nname: %s\ndescription: test skill\n---\nnew'%name)
         real=installer.os.replace
         def failing(src,dst):
             if Path(dst)==self.target/'product-03' and 'stage-' in str(src):raise OSError('simulated failure')
             return real(src,dst)
         with patch.object(installer.os,'replace',side_effect=failing):
             with self.assertRaises(OSError):self.install()
-        for n in range(11):self.assertEqual((self.target/('product-%02d'%n)/'SKILL.md').read_text(),'old '+str(n))
+        for n in range(11):self.assertTrue((self.target/('product-%02d'%n)/'SKILL.md').read_text().endswith('old '+str(n)))
         self.assertEqual(manifest,(self.target/'.product-delivery/manifest.json').read_bytes())
         self.assertFalse((self.target/'.product-delivery/install.lock').exists())
 
     def test_validator_dependency_failure_preserves_installed_bundle(self):
         (self.source/'product-10').rename(self.source/'product-workflow')
+        skill=self.source/'product-workflow/SKILL.md'
+        skill.write_text(skill.read_text().replace('name: product-10','name: product-workflow'))
         self.install()
         before=(self.target/'.product-delivery/manifest.json').read_bytes()
         validators=self.source/'product-workflow/validators';validators.mkdir()
@@ -148,6 +154,81 @@ class InstallTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.install()
         self.assertEqual(before,(self.target/'.product-delivery/manifest.json').read_bytes())
         self.assertFalse((self.target/'.product-delivery/install.lock').exists())
+
+    def test_source_frontmatter_name_and_description_are_validated(self):
+        skill=self.source/'product-00/SKILL.md'
+        skill.write_text('---\nname: another-name\ndescription: test\n---\nbody')
+        with self.assertRaisesRegex(ValueError,'name 必须与目录名一致'):self.install()
+        skill.write_text('---\nname: product-00\n---\nbody')
+        with self.assertRaisesRegex(ValueError,'缺 description'):self.install()
+
+    def test_client_aliases_multiple_targets_and_deduplication(self):
+        home=Path(self.temp.name)/'home';home.mkdir()
+        targets=installer.resolve_targets(
+            ['claude','qwenwork','traework','codex','dsh'],
+            [home/'.agents/skills'],
+            home=home,
+            environ={},
+            platform_name='darwin',
+        )
+        by_path={str(path):label for label,path in targets}
+        self.assertEqual(by_path[str((home/'.claude/skills').resolve())],'Claude Code')
+        self.assertEqual(by_path[str((home/'.qwenwork/skills').resolve())],'千问办公 / QwenWork')
+        self.assertEqual(by_path[str((home/'.trae-cn/skills').resolve())],'TRAE Work / TRAE CN')
+        self.assertEqual(by_path[str((home/'.dsh/skills').resolve())],'DeepSeek Harness (DSH)')
+        self.assertEqual(
+            by_path[str((home/'.agents/skills').resolve())],
+            'OpenAI Codex + 自定义目录',
+        )
+
+    def test_all_detected_uses_markers_and_skips_legacy_profile(self):
+        home=Path(self.temp.name)/'home';home.mkdir()
+        for marker in ['.claude','.codex','.workbuddy','.trae-cn']:(home/marker).mkdir()
+        targets=installer.resolve_targets(
+            all_detected=True,
+            home=home,
+            environ={},
+            platform_name='darwin',
+        )
+        labels={label for label,_ in targets}
+        self.assertEqual(labels,{'Claude Code','OpenAI Codex','WorkBuddy','TRAE Work / TRAE CN'})
+        self.assertNotIn(home/'.codex/skills',{path for _,path in targets})
+
+    def test_generic_override_does_not_add_implicit_codex(self):
+        home=Path(self.temp.name)/'home';home.mkdir()
+        target=home/'shared skills'
+        self.assertEqual(
+            installer.resolve_targets(home=home,environ={'AGENT_SKILLS_DIR':str(target)}),
+            [('自定义目录',target.resolve())],
+        )
+        self.assertEqual(installer.resolve_targets(home=home,environ={}),[])
+
+    def test_dsh_home_and_direct_override(self):
+        home=Path(self.temp.name)/'home';home.mkdir()
+        dsh_home=home/'dsh data'
+        self.assertEqual(
+            installer.app_target('dsh',home,{'DSH_HOME':str(dsh_home)}),
+            dsh_home/'skills',
+        )
+        direct=home/'custom dsh skills'
+        self.assertEqual(
+            installer.app_target('deepseek-harness',home,{'DSH_SKILLS_DIR':str(direct)}),
+            direct,
+        )
+        self.assertIn('dsh',installer.detected_apps(home,{'DSH_HOME':str(dsh_home)}))
+
+    def test_export_packages_puts_skill_file_at_archive_root(self):
+        destination=Path(self.temp.name)/'packages'
+        with contextlib.redirect_stdout(io.StringIO()):installer.export_packages(self.source,destination)
+        archives=sorted(destination.glob('product-*.zip'))
+        self.assertEqual(len(archives),11)
+        with zipfile.ZipFile(archives[0]) as package:
+            self.assertIn('SKILL.md',package.namelist())
+            self.assertFalse(any(name.startswith('product-00/') for name in package.namelist()))
+        manifest=json.loads((destination/'packages.json').read_text())
+        self.assertEqual(len(manifest['packages']),11)
+        for archive in archives:
+            self.assertEqual(manifest['packages'][archive.name],hashlib.sha256(archive.read_bytes()).hexdigest())
 
 
 if __name__=='__main__':unittest.main()

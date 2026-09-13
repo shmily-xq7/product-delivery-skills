@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0-local.1",
+  "version": "1.3.0",
   "source_repository": "https://github.com/shmily-xq7/product-delivery-skills",
-  "base_commit": "a7f066c8e86414a989c1ba48be863df452e217ed",
+  "base_commit": "df8e2c91fa18acb29f579c800551cb5cdfb02171",
   "local_changes": true
 }
