@@ -87,9 +87,9 @@ bash install.sh --app codex
 | TRAE Work / TRAE CN | `trae-work` | `~/.trae-cn/skills` | `TRAE_SKILLS_DIR` |
 | TraeCode CLI | `trae-cli` | `~/.traecli/skills` | `TRAECLI_SKILLS_DIR` |
 | DeepSeek Harness / DSH | `dsh` | `${DSH_HOME:-~/.dsh}/skills` | `DSH_SKILLS_DIR` |
-| Codex 旧目录 | `codex-legacy` | `${CODEX_HOME:-~/.codex}/skills` | `CODEX_SKILLS_DIR` |
+| Codex（`.codex` 目录） | `codex-legacy` | `${CODEX_HOME:-~/.codex}/skills` | `CODEX_SKILLS_DIR` |
 
-`codex-legacy` 只用于升级旧安装，不参与自动检测。
+`codex-legacy` 用于明确安装到 `~/.codex/skills`。为避免与 `codex` 对应的目录重复安装，`--all-detected` 不会自动选择它；需要使用该目录时，请手动指定 `--app codex-legacy`。
 
 ### 其他安装方式
 
@@ -150,94 +150,11 @@ bash install.sh --export-packages ./dist/client-import
 
 可选值：`产品设计`、`设计到模块`、`全链`。未声明时按 `全链` 处理。
 
-## 默认产物结构
+### 检查与结项
 
-```text
-<项目根>/
-├── product-workflow.json                    # 可选项目配置
-├── 项目战略规划/
-│   ├── 需求澄清报告.md
-│   └── 原始需求.md
-├── 项目战术执行/
-│   ├── 00_产品设计文档.md
-│   ├── 00_功能架构设计文档.md
-│   ├── 01_<模块名>详细设计.md
-│   ├── 90_诊断报告_<主题>.md
-│   └── 99_交付清单.md
-├── frontend/
-├── backend/
-├── outputs/diagrams/                         # Mermaid、SVG、HTML 和来源清单
-└── .product-workflow/                        # 问题台账和运行证据
-```
+工作流可以检查上下游产物是否一致、记录当前测试证据，并按交付范围生成结项清单。结构检查只能证明文件和引用关系符合规则，不能代替业务评审或真实测试。
 
-项目配置说明：
-
-- [`project-config.md`](product-workflow/references/project-config.md)
-- [`project-config.example.json`](product-workflow/references/project-config.example.json)
-- [`verification-contract.md`](product-workflow/references/verification-contract.md)
-
-## 检查与结项
-
-以下示例使用 Codex 默认目录；其他客户端请修改 `SKILLS_DIR`。
-
-```bash
-SKILLS_DIR="${AGENT_SKILLS_DIR:-$HOME/.agents/skills}"
-PROJECT_ROOT="/path/to/project"
-
-# 检查产物是否陈旧
-python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" \
-  --project-root "$PROJECT_ROOT"
-
-# 复核后记录来源指纹
-python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" \
-  --project-root "$PROJECT_ROOT" \
-  --stamp 项目战术执行/00_功能架构设计文档.md
-
-# 执行项目检查并保存证据
-python3 "$SKILLS_DIR/product-workflow/scripts/run_checks.py" \
-  --project-root "$PROJECT_ROOT" \
-  --check typecheck lint backend e2e
-
-# 生成结项清单
-python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" \
-  --project-root "$PROJECT_ROOT" \
-  --finalize
-```
-
-结构检查只验证文件、格式和引用关系，不能代替业务评审或真实测试。结项命令读取已有证据，不会隐式运行测试。
-
-## 仓库结构
-
-```text
-product-delivery-skills/
-├── install.sh
-├── scripts/install.py
-├── release.json
-├── product-workflow/
-├── product-requirement/
-├── product-design/
-├── product-architecture/
-├── product-module-design/
-├── product-development/
-├── product-e2e-test/
-├── product-diagnosis/
-├── product-ui-spec/
-├── product-prototype/
-├── product-diagram/
-├── product-doc-convert/
-└── tests/
-```
-
-每个 Skill 以 `SKILL.md` 为入口，可包含 `references/`、`scripts/` 和 `assets/`。
-
-## 开发验证
-
-```bash
-npm ci --ignore-scripts --prefix product-workflow/validators
-python3 -B -m unittest discover -s tests -v
-```
-
-参考前端另见 [`product-development/assets/reference-app`](product-development/assets/reference-app)。文档转换的可选依赖见 [`product-doc-convert/SKILL.md`](product-doc-convert/SKILL.md)。
+具体命令与判断规则见 [`product-workflow/SKILL.md`](product-workflow/SKILL.md) 和 [`verification-contract.md`](product-workflow/references/verification-contract.md)。
 
 ## 许可证
 
