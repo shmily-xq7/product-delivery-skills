@@ -54,8 +54,6 @@
 - npm
 - 首次安装可访问 npm registry
 
-源码仓库不提交 `node_modules`。安装器会执行 `npm ci`，按 `package-lock.json` 下载并验证 Mermaid 运行依赖。
-
 ### 获取项目
 
 ```bash
@@ -110,7 +108,7 @@ bash install.sh --target /path/to/skills
 bash install.sh --export-packages ./dist/client-import
 ```
 
-`product-workflow.zip` 和 `product-diagram.zip` 包含各自的 Mermaid 运行时，可单独导入。更新时拉取新代码并重新执行原安装命令；安装器会备份旧版本并在单个目标失败时回滚。
+每个 ZIP 均可单独导入。更新时拉取新代码并重新执行原安装命令。
 
 ## 使用
 
