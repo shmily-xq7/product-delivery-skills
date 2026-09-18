@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "patterns": [
+    {
+      "id": "standard-list",
+      "title": "标准列表",
+      "appliesWhen": "查询、分页和行级增删改查",
+      "reference": "references/page-patterns/list-and-batch.md",
+      "section": "standard-list 标准列表",
+      "requiredConcerns": ["统一查询模型", "加载/空/失败状态", "保存失败保留草稿", "删除二次确认"]
+    },
+    {
+      "id": "batch-processing",
+      "title": "批量处理",
+      "appliesWhen": "对一组对象执行批量删除、启停、分配或审批",
+      "reference": "references/page-patterns/list-and-batch.md",
+      "section": "batch-processing 批量处理",
+      "requiredConcerns": ["选择范围", "服务端重新校验", "逐对象结果", "部分成功恢复"]
+    },
+    {
+      "id": "dynamic-columns",
+      "title": "动态列",
+      "appliesWhen": "列显隐、顺序、固定位置或宽度可配置",
+      "reference": "references/page-patterns/list-and-batch.md",
+      "section": "dynamic-columns 动态列",
+      "requiredConcerns": ["稳定列 ID", "必需列保护", "配置优先级", "旧配置迁移"]
+    },
+    {
+      "id": "tree-table",
+      "title": "树表联动",
+      "appliesWhen": "层级树控制右侧列表或详情",
+      "reference": "references/page-patterns/tree-and-rbac.md",
+      "section": "tree-table 树表联动",
+      "requiredConcerns": ["稳定节点 ID", "深链恢复", "请求竞态", "移动/删除约束"]
+    },
+    {
+      "id": "rbac-matrix",
+      "title": "权限矩阵",
+      "appliesWhen": "为角色分配资源、数据范围与动作权限",
+      "reference": "references/page-patterns/tree-and-rbac.md",
+      "section": "rbac-matrix 权限矩阵",
+      "requiredConcerns": ["权限层级", "父子半选", "并发控制", "服务端鉴权"]
+    },
+    {
+      "id": "audit-log",
+      "title": "审计记录",
+      "appliesWhen": "检索操作记录并查看变更详情",
+      "reference": "references/page-patterns/audit-and-transfer.md",
+      "section": "audit-log 审计记录",
+      "requiredConcerns": ["稳定事件字段", "时区", "敏感字段脱敏", "只读与导出"]
+    },
+    {
+      "id": "import-export",
+      "title": "导入导出",
+      "appliesWhen": "文件批量校验写入或异步生成下载文件",
+      "reference": "references/page-patterns/audit-and-transfer.md",
+      "section": "import-export 导入导出",
+      "requiredConcerns": ["文件双重校验", "分阶段导入", "真实任务状态", "结果可追溯"]
+    },
+    {
+      "id": "nested-tabs",
+      "title": "多层标签页",
+      "appliesWhen": "模块内存在需要深链的二级或三级页签",
+      "reference": "references/page-patterns/navigation-and-embedded.md",
+      "section": "nested-tabs 多层标签页",
+      "requiredConcerns": ["路由单一状态", "深链与历史", "草稿保留", "无权回退"]
+    },
+    {
+      "id": "embedded-content",
+      "title": "嵌入内容",
+      "appliesWhen": "iframe 或受控容器嵌入第三方/独立子系统",
+      "reference": "references/page-patterns/navigation-and-embedded.md",
+      "section": "embedded-content 嵌入内容",
+      "requiredConcerns": ["地址白名单", "浏览器安全策略", "消息校验", "加载失败恢复"]
+    },
+    {
+      "id": "detail-editor",
+      "title": "详情与编辑",
+      "appliesWhen": "对象查看、编辑、保存和取消在同一流程中切换",
+      "reference": "references/page-patterns/detail-editor.md",
+      "section": "detail-editor 详情与编辑",
+      "requiredConcerns": ["快照与草稿", "字段权限", "并发冲突", "失败保留输入"]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 name: product-module-design
 description: "产出单模块的《〈序号〉_〈模块名〉详细设计.md》——产品交付链路第三阶段。把功能架构设计落地到具体模块：引用对应的产品设计来源章节、列出本模块覆盖的 AC 验收标准编号、前端详细设计（代码结构/组件表/状态管理/伪代码）、后端详细设计（代码结构/DDL/ER 图/API 契约表/伪代码）、测试详细设计（用例表含对应 AC 编号）。触发词：模块详细设计、页面详细设计、某模块的接口契约、数据模型细化、DDL、表结构设计、测试用例表、模块覆盖哪些 AC。不负责整系统架构（那是功能架构设计）。"
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   agent_created: true
 ---
 
@@ -28,6 +28,7 @@ metadata:
 | 产品设计文档 | `项目战术执行/00_产品设计文档.md` | 提取本模块对应的**页面功能设计内容**（稳定来源 ID 引用） |
 | 功能架构设计文档 | `项目战术执行/00_功能架构设计文档.md` | 提取本模块的**代码结构、表定义、API 清单** |
 | 页面设计规范 | 本 skill `references/module-design-spec.md` | 决定输出结构与命名规范 |
+| 后台页面模式目录 | `product-development/references/page-patterns/README.md` | 选择页面模式并补齐该模式的状态、失败路径和验证点 |
 
 若上游缺失或内容明显不足以支撑本模块，**先回流上游补齐**，不要自己编造。
 
@@ -42,6 +43,7 @@ metadata:
 - 来源变化先判断实际影响；只有需要更新的模块才修改并重新验证。不得仅更新 stamp 来掩盖未处理的变化。
 
 ### 二、前端详细设计
+- **页面模式**：列出模式 ID、选择依据及 `requiredConcerns` 的落实位置；一个页面可组合多个模式，不适用时说明页面形态。
 - **代码结构**：从功能架构的「前端代码结构树」中提取本模块相关文件，树形展示。
 - **核心组件设计**：表格，含组件名 / 核心职责 / Props（名称·类型·必填·默认值·用途）/ 事件 / 插槽 / 其他依赖。
 - **状态管理（Zustand / Redux Toolkit）**：State / Selectors / Actions。
@@ -73,7 +75,7 @@ metadata:
 | DB 列 / 表 | snake_case | `created_at`, `project_management` |
 | 后端（Python） | Pydantic / SQLAlchemy 蛇形 | `project_id` |
 
-**技术栈基线**：前端 React 18 + TypeScript + Vite + Ant Design（主线）；状态管理 Zustand / Redux Toolkit；后端 FastAPI + SQLAlchemy + PostgreSQL。详见 `product-development`。
+**技术栈基线**：先按 `product-development` 识别目标项目 profile；新项目默认 React + Ant Design，既有 Vue 2 / Vue 3 项目沿用对应 profile。后端默认 FastAPI + SQLAlchemy + PostgreSQL，项目配置另有声明时以配置为准。
 
 ## 5. 自检清单
 
@@ -95,6 +97,7 @@ metadata:
 
 - [ ] 已声明准确的来源章节与共享依赖；需要自包含副本时由脚本生成
 - [ ] 前端代码结构 / 后端代码结构均可追溯到功能架构文档
+- [ ] 已选择适用的后台页面模式，并把必备状态、失败路径和验证点写入组件、接口或测试设计
 - [ ] API 契约与功能架构文档**一致**（未新增、未改名、未改字段）
 - [ ] 每个接口都有请求参数、成功响应、错误响应三块
 - [ ] 每张表有 DDL 且字段含类型/约束/索引/注释
@@ -126,6 +129,7 @@ python3 scripts/validate_module_doc.py \
 **外部依赖**（同族 skill）
 - `product-design` / `product-architecture` —— 上游输入
 - `product-development` —— 下游消费者
+- `product-development/references/page-patterns/` —— 后台页面模式目录与必备关注项
 - `product-e2e-test` —— 消费本文件的测试用例表
 - `product-diagram` —— 接口时序、状态、模块依赖或 ER 图需要独立 SVG / HTML、来源登记或陈旧检查时调用；权威源码仍留在本阶段文档
 

@@ -2,7 +2,7 @@
 name: product-doc-convert
 description: "本地文档格式互转工具（可运行 Python 脚本，跨阶段横向能力）。支持 docx/doc/docm → Markdown（保留表格与标题层级）、Markdown → docx（可指定中文字体）、表格型 docx → 结构化 docx、docx 标题层级 → Excel、三级列 Excel → 分级标题 Markdown。触发词：文档转 md、Word 转 Markdown、Markdown 转 Word、把表格做成 docx、docx 导出 excel、excel 转 md、格式转换。不负责文档内容撰写。"
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   agent_created: true
 ---
 

@@ -46,7 +46,17 @@
 
 ## 前端详细设计
 
+### 页面模式选择
+
+先读取 `product-development/references/page-patterns/README.md`，根据本模块页面任务列出模式 ID、选择依据和 `requiredConcerns` 的落实位置。一个页面可组合多个模式；树表、权限矩阵、导入导出等复杂页面不能只按普通列表描述。模式所要求的失败路径必须进入本模块测试用例表。
+
+| 页面 | 模式 ID | 选择依据 | 必备关注项的落实位置 |
+|---|---|---|---|
+| 用户列表 | `standard-list`、`batch-processing` | 分页检索并支持批量启停 | 查询状态 / 批量 API / 部分成功提示 / E2E 用例 |
+
 ### 开发规范
+
+> 下方代码片段展示默认 React profile 的写法。实际输出必须使用 `product-development` 识别出的唯一 profile；Vue 项目使用对应 profile，不照抄 React API。
 
 #### 文件命名规范
 - **组件 / 页面文件**: PascalCase (`UserManagement.tsx`、`ProjectList.tsx`)

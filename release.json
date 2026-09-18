@@ -1,7 +1,7 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "source_repository": "https://github.com/shmily-xq7/product-delivery-skills",
-  "base_commit": "d4adbfe243666f3ac693a0b3d6a1eb276719ed3d",
+  "base_commit": "1efaec798c22a5fcb55de2d7f349c581b5984dd2",
   "skills": [
     "product-requirement",
     "product-design",

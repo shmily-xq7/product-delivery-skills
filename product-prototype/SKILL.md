@@ -2,7 +2,7 @@
 name: product-prototype
 description: "页面原型与复刻工具（跨阶段横向能力，与分析链路解耦）。三件事：① 生成 AntD 风格的 ASCII 界面线框图（字符规范、页面/表格/卡片/弹窗模板）；② 生成单文件 HTML + Bootstrap5 静态原型页（配色 CSS 变量、面包屑/标题/搜索区/表格/分页/导航栏规范）；③ 按「分析→实施→验证→检查清单」四阶段复刻既有页面。触发词：画 ASCII 界面、ASCII 线框、页面布局图、做静态 HTML 原型、复刻页面、还原设计稿、仿一个页面。不负责业务流程与字段定义。"
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   agent_created: true
 ---
 
@@ -62,7 +62,7 @@ metadata:
 
 **关键原则**：先对齐**结构与信息层级**，再调视觉细节。反过来做会反复返工。
 
-**注意**：本 skill 只覆盖 **HTML 页面复刻**流程。Vue 页面复刻**不在本族范围内**——本族技术栈基线为仅 React 栈（见 `product-development`）。若项目确实需要复刻 Vue 页面，请沿用同一套「分析 → 实施 → 验证 → 检查清单」四阶段方法自行执行，产物落在目标项目的 Vue 工程内。
+**框架衔接**：本节的四阶段方法负责复刻分析与视觉验收。正式代码按目标项目技术栈交给 `product-development`：React 使用默认 profile；Vue 2 / Vue 3 分别使用对应 profile。Vue 的组件映射、路由、插槽和验证细则见 `references/vue-page-clone.md`，产物落在目标项目源码目录。
 
 ## 5. 完成前自检清单
 
@@ -81,6 +81,7 @@ metadata:
 | `references/ascii-ui-generator.md` | **ASCII 生成规范**（字符规范、页面/表格/卡片/弹窗模板、响应规则、示例） |
 | `references/html-page-dev.md` | **单文件 HTML 页面开发规范**（Bootstrap5、CSS 变量、面包屑/标题/搜索/表格/分页细则、Web Components 导航栏） |
 | `references/html-page-clone.md` | **HTML 页面复刻流程**（角色、四阶段、输出样例、检查清单） |
+| `references/vue-page-clone.md` | Vue 页面复刻衔接（Element 组件映射、路由、插槽、对比验证） |
 
 **外部依赖**（同族 skill）
 - `product-design` —— **不调用本 skill**。产品设计文档里的「页面布局设计详情」由该阶段**直接读 `references/ascii-ui-generator.md` 自行绘制**：布局图是该文档正文的一部分，就地画少一次跳转。本 skill 只在用户**主动要**线框 / HTML 原型 / 页面复刻时被调用。两边的线框规范**同一份**，不会出现两套画法。

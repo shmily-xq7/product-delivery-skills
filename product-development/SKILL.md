@@ -1,19 +1,35 @@
 ---
 name: product-development
-description: "按模块详细设计写代码——产品交付链路第四阶段（React 栈）。定义全族技术栈基线（单一事实源），提供 React 列表页 / 标签页的分步开发流程与可直接复制的整页模板（AntD + TS），覆盖前后端命名一致性、枚举单一事实源、后端 FastAPI 接口实现。触发词：按设计写代码、生成页面组件、React 列表页开发、标签页开发、对接 API、AntD 组件实现、前后端命名不一致。不负责写设计文档（那在前三个阶段）。"
+description: "按模块详细设计写代码——产品交付链路第四阶段。先识别目标项目技术栈，再按需加载 React + AntD、Vue 2 + Element UI（既有项目兼容）或 Vue 3 + Element Plus profile；提供基础模板与后台页面模式目录，并覆盖前后端命名一致性、枚举单一事实源和 FastAPI 后端实现。触发词：按设计写代码、生成页面组件、React/Vue 后台页面、列表页、标签页、权限矩阵、导入导出、对接 API。不负责写设计文档。"
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   agent_created: true
 ---
 
-# 代码开发（React 栈）
+# 代码开发（技术栈适配）
 
 > 定位：详细设计 → **可运行代码**。
-> 本 skill 同时承担**全族技术栈基线的唯一事实源**——其他 skill 遇到技术栈问题应引用此处，不得各自另立一套。
+> 本 skill 同时承担**全族技术栈基线与适配规则的唯一事实源**。共享交付约束见 `references/common-development-contract.md`；框架细节只读取当前项目对应的 profile，不得把多套框架规则混用。
 
-## 1. 默认技术栈基线
+## 0. 先选择一个技术栈 Profile
 
-项目根 `product-workflow.json` 的 paths / stack / commands 配置优先；默认值与执行方法见 `product-workflow/references/project-config.md`。复用已有项目技术栈，不能仅为符合示例而迁移项目。
+优先级：`product-workflow.json` 的 `stack.frontend` 明确声明 → 目标前端 `package.json` 依赖识别 → 新项目默认 React。可运行：
+
+```bash
+python3 "$SKILLS_DIR/product-development/scripts/detect_stack.py" --project-root /实际项目根
+```
+
+| 识别结果 | 读取 | 使用模板 |
+|---|---|---|
+| `react-antd` | `references/profiles/react-antd.md` | `assets/templates/` 现有 React 模板 |
+| `vue2-element` | `references/profiles/vue2-element.md` | `assets/templates/vue2/` |
+| `vue3-element-plus` | `references/profiles/vue3-element-plus.md` | `assets/templates/vue3/` |
+
+检测冲突或无法识别时先核对配置，不猜测框架。Vue 2 profile 只用于维护已有 Vue 2 项目；新建 Vue 项目使用 Vue 3 profile。无论选择哪一套，先遵守 `references/common-development-contract.md`。
+
+## 1. 默认技术栈基线（React Profile）
+
+项目根 `product-workflow.json` 的 paths / stack / commands 配置优先；默认值与执行方法见 `product-workflow/references/project-config.md`。复用已有项目技术栈，不能仅为符合示例而迁移项目。下表与紧随其后的目录树只描述默认 React profile；Vue 项目以对应 profile 为准。
 
 | 层 | 选型 | 备注 |
 |---|---|---|
@@ -99,11 +115,23 @@ metadata:
 ## 2. 何时使用
 
 - 用户要"按详细设计写代码""生成页面组件""对接 API"。
-- 开发 React 列表页（筛选 + 表格 + 分页 + 增删改查 + 弹窗）或标签页（多 Tab 路由布局）。
+- 开发 React 或 Vue 列表页（筛选 + 表格 + 分页 + 增删改查 + 弹窗）或标签页（多 Tab 路由布局）。
 - 实现 FastAPI 后端接口、SQLAlchemy 模型与迁移。
 - 需要判断某个技术选型或命名是否符合基线。
 
-## 3. 列表页开发流程
+## 2.1 先匹配后台页面模式
+
+普通列表和标签页之外，树表联动、权限矩阵、审计记录、导入导出、动态列、批量处理、详情编辑、嵌入内容等页面存在不同的状态与失败路径。开发前读取 `references/page-patterns/README.md`，按详细设计选择一个或多个模式；只加载命中的参考文件，不能因为页面外观相似而跳过模式契约。
+
+模式选择必须写入本次实现说明，并把所选模式的 `requiredConcerns` 映射到代码与 AC/E2E。机器可读目录位于 `references/page-patterns/catalog.json`，可运行：
+
+```bash
+python3 scripts/page_patterns.py list
+python3 scripts/page_patterns.py show import-export
+python3 scripts/page_patterns.py validate
+```
+
+## 3. React 列表页开发流程
 
 参考 `references/react-datalist-page.md`（**完整分步规范**）。核心约定：
 
@@ -122,9 +150,9 @@ metadata:
 
 **可直接复制的骨架**：`assets/templates/UserManagement.tsx` + `UserListLayout.tsx` + `data-list-page.scss`。布局组件随模板提供，仅依赖 React 与 AntD；传入稳定的 `UserService` 实例连接真实 API。部门/状态来自 dictionaries，保存和删除等待真实 Promise 成功后刷新，失败保留错误与输入。按项目契约修改类型和字段，模板中无生产默认模拟数据。
 
-**可运行参考工程**：`assets/reference-app/`。它通过独立的 demo-service 注入明确标识的内存演示数据，验证模板交互，不是业务后端实现。以 package-lock.json 固定依赖；进入该目录执行 `npm ci`、`npm run build`、`npm test`。浏览器测试需要本机 Playwright Chromium。复制生产模板时不要复制 demo-service；应用入口引入 `product-ui-spec/references/tokens.css` 并映射 AntD theme。
+**可运行参考工程**：`assets/reference-app/`。它通过独立的 demo-service 注入明确标识的内存演示数据，只证明 README 中列出的模板挂载、构建与交互行为，不证明真实后端、鉴权或部署可用。以 package-lock.json 固定依赖；进入该目录执行 `npm ci`、`npm run verify`。浏览器测试需要本机 Playwright Chromium。复制生产模板时不要复制 demo-service；应用入口引入 `product-ui-spec/references/tokens.css` 并映射 AntD theme。
 
-## 4. 标签页开发流程
+## 4. React 标签页开发流程
 
 参考 `references/react-tabs-page.md`（**完整分步规范**）。核心约定：
 
@@ -150,7 +178,9 @@ metadata:
 
 - [ ] 页面结构复用布局组件，未内联铺布局
 - [ ] 表格列宽符合规范 3.2.1（CRITICAL）
-- [ ] 所有 props / API 响应 / store 有 TypeScript 类型
+- [ ] 已确定且只加载一个技术栈 profile；没有把 React、Vue 2、Vue 3 规则混用
+- [ ] 已从页面模式目录选择适用模式，并落实其必备状态、失败路径和验证点
+- [ ] TypeScript 项目的 props / API 响应 / store 有明确类型；既有 JavaScript 项目有等价契约说明
 - [ ] 对外 API 字段 camelCase、DB 列 snake_case，无混用
 - [ ] 前端无硬编码枚举（改为后端下发）
 - [ ] 样式 token 取自 `product-ui-spec`，未自造色值
@@ -164,16 +194,27 @@ metadata:
 |---|---|
 | `references/react-datalist-page.md` | **列表页开发规范**（布局组件、Props、列宽规范、事件、Render Props、快速开发流程、检查清单、多 Tab 扁平化方案） |
 | `references/react-tabs-page.md` | **标签页开发规范**（容器+子页、路由、接口定义、开发步骤、故障排查、检查清单） |
-| `references/agent-frontend.md` | 前端工程师角色定义（已按 AntD 主线改写） |
+| `references/common-development-contract.md` | 全技术栈共用的设计承接、数据、错误态、权限和验证契约 |
+| `references/profiles/react-antd.md` | React + AntD 路由页；索引现有规范、模板和检查命令 |
+| `references/profiles/vue2-element.md` | 既有 Vue 2 + Element UI 项目的兼容开发规范 |
+| `references/profiles/vue3-element-plus.md` | Vue 3 + TypeScript + Element Plus 开发规范 |
+| `references/page-patterns/README.md` | 后台页面模式入口与选择规则 |
+| `references/page-patterns/catalog.json` | 10 类后台页面模式的机器可读索引 |
+| `references/page-patterns/*.md` | 列表批量、树表权限、审计导入导出、导航嵌入、详情编辑契约 |
+| `references/agent-frontend.md` | React 前端工程师角色定义（AntD 主线） |
 | `references/agent-backend.md` | 后端工程师角色定义（FastAPI + SQLAlchemy + PG） |
 | `references/backend-frontend-consistency.md` | 前后端枚举一致性策略（**参考思路，非强制规范**） |
 | `assets/templates/UserManagement.tsx` | 注入真实 service 的列表页骨架 |
 | `assets/templates/UserListLayout.tsx` | 随模板提供的 AntD 布局组件 |
-| `assets/reference-app/` | 隔离演示数据的可运行参考工程与交互测试 |
+| `assets/reference-app/` | 说明验证范围与能力边界的可运行参考工程 |
 | `assets/templates/data-list-page.scss` | 列表页配套样式 |
 | `assets/templates/TabsPage/index.tsx` | 标签页容器组件模板 |
 | `assets/templates/TabsPage/routes.tsx` | 标签页路由配置模板 |
 | `assets/templates/TabsPage/TabContent.tsx` | 标签页子页面模板 |
+| `assets/templates/vue2/` | Vue 2 列表页与标签页模板（无模拟数据） |
+| `assets/templates/vue3/` | Vue 3 列表页与标签页模板（无模拟数据） |
+| `scripts/detect_stack.py` | 从项目配置与 package.json 选择唯一 profile |
+| `scripts/page_patterns.py` | 列出、查询并校验后台页面模式目录 |
 
 **外部依赖**（同族 skill）
 - `product-module-design` —— 上游输入（模块详细设计）

@@ -357,7 +357,21 @@ def evaluate(project_root):
 
 def check_one(project_root):
     findings = []
-    for r in evaluate(project_root):
+    rows = evaluate(project_root)
+    if not rows:
+        cfg = load_config(project_root)
+        docs = document_paths(cfg)
+        findings.append(Finding(
+            "WARN", "F-EMPTY",
+            "未发现工作流产物，当前项目尚未初始化或项目路径/配置不正确",
+            ["检查路径：%s" % os.path.abspath(project_root),
+             "产品设计：%s" % docs["design"],
+             "功能架构：%s" % docs["architecture"],
+             "模块目录：%s" % cfg["paths"]["execution"],
+             "请先确认 --project-root 与 product-workflow.json；没有产物不等于全部正常"]
+        ))
+        return findings
+    for r in rows:
         if r["status"] == "UNMARKED":
             findings.append(Finding("WARN", "F0",
                                     "%s 没有「生成元信息」块 —— 无法判定是否陈旧" % r["path"],
@@ -582,7 +596,8 @@ def render(findings):
             lines.append("           %s" % d)
     n_stale = sum(1 for f in findings if f.level == "STALE")
     n_warn = sum(1 for f in findings if f.level == "WARN")
-    verdict = "STALE" if n_stale else ("OK(WARN)" if n_warn else "OK")
+    uninitialized = any(f.code == "F-EMPTY" for f in findings)
+    verdict = "UNINITIALIZED" if uninitialized else ("STALE" if n_stale else ("OK(WARN)" if n_warn else "OK"))
     lines.append("  --> 结论: %s  (STALE=%d WARN=%d)" % (verdict, n_stale, n_warn))
     return "\n".join(lines)
 
@@ -596,6 +611,8 @@ def main(argv=None):
                     help="交付清单输出路径（默认 <项目根>/项目战术执行/99_交付清单.md）")
     ap.add_argument("--json", action="store_true", help="输出机读 JSON")
     ap.add_argument("--quiet", action="store_true", help="只输出汇总")
+    ap.add_argument("--strict", action="store_true",
+                    help="WARN（含未初始化）也返回非零；用于 CI 或自动化检查")
     args = ap.parse_args(argv)
 
     root = os.path.abspath(args.project_root)
@@ -635,12 +652,17 @@ def main(argv=None):
     elif args.quiet:
         n_stale = sum(1 for f in findings if f.level == "STALE")
         n_warn = sum(1 for f in findings if f.level == "WARN")
-        print("%s  (STALE=%d WARN=%d)" % ("STALE" if n_stale else ("OK(WARN)" if n_warn else "OK"),
+        uninitialized = any(f.code == "F-EMPTY" for f in findings)
+        verdict = "UNINITIALIZED" if uninitialized else ("STALE" if n_stale else ("OK(WARN)" if n_warn else "OK"))
+        print("%s  (STALE=%d WARN=%d)" % (verdict,
                                           n_stale, n_warn))
     else:
         print(render(findings))
 
-    return 1 if any(f.level == "STALE" for f in findings) else 0
+    blocking = any(f.level == "STALE" for f in findings)
+    if args.strict:
+        blocking = blocking or any(f.level == "WARN" for f in findings)
+    return 1 if blocking else 0
 
 
 if __name__ == "__main__":

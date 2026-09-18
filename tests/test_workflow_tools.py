@@ -63,6 +63,13 @@ class ProjectTests(unittest.TestCase):
     def test_missing_stamp_has_nonzero_cli_exit(self):
         result=subprocess.run([sys.executable,str(ROOT/'product-workflow/scripts/check_freshness.py'),'--project-root',str(self.root),'--stamp','missing.md'],capture_output=True)
         self.assertNotEqual(result.returncode,0)
+    def test_empty_project_reports_uninitialized_and_strict_fails(self):
+        findings=workflow.check_one(str(self.root))
+        self.assertEqual([(x.level,x.code) for x in findings],[('WARN','F-EMPTY')])
+        self.assertIn('UNINITIALIZED',workflow.render(findings))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(workflow.main(['--project-root',str(self.root)]),0)
+            self.assertEqual(workflow.main(['--project-root',str(self.root),'--strict']),1)
     def test_stamp_batch_preflight_preserves_earlier_file(self):
         self.setup_project();before=self.design.read_bytes()
         with self.assertRaises(ValueError):workflow.main(['--project-root',str(self.root),'--stamp',str(self.design),'missing.md'])

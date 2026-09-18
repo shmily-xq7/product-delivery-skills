@@ -12,7 +12,7 @@
 - **运行证据**：保存类型检查、Lint、后端测试和 E2E 报告。
 - **按范围结项**：支持只交付产品设计、交付到模块或完成全链。
 
-默认开发基线为 React 18 + TypeScript + Ant Design、FastAPI + SQLAlchemy + PostgreSQL。已有项目可通过 `product-workflow.json` 使用自己的路径、技术栈和检查命令。
+新项目默认开发基线为 React 18 + TypeScript + Ant Design、FastAPI + SQLAlchemy + PostgreSQL。已有项目按 `product-workflow.json` 和依赖自动选择 React、Vue 2（兼容维护）或 Vue 3 profile，并使用项目自己的路径和检查命令。
 
 ## 工作流
 
