@@ -20,10 +20,77 @@ globalThis.Element = dom.window.Element;
 globalThis.HTMLElement = dom.window.HTMLElement;
 globalThis.SVGElement = dom.window.SVGElement;
 
-// The server-side DOM has no layout engine, so use stable text estimates.
-// Readability is verified separately by opening the generated artifact.
+// The server-side DOM has no layout engine. Estimate text boxes and derive the
+// final canvas from rendered geometry instead of counting CSS text as content.
+function numberAttribute(element, name, fallback = 0) {
+  const value = Number.parseFloat(element.getAttribute?.(name) || '');
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function translation(element, root) {
+  let x = 0;
+  let y = 0;
+  for (let current = element; current && current !== root; current = current.parentElement) {
+    const transform = current.getAttribute?.('transform') || '';
+    for (const match of transform.matchAll(/translate\(\s*(-?[\d.]+)(?:[ ,]+(-?[\d.]+))?\s*\)/g)) {
+      x += Number.parseFloat(match[1]) || 0;
+      y += Number.parseFloat(match[2]) || 0;
+    }
+  }
+  return { x, y };
+}
+
+function geometryBox(root) {
+  const points = [];
+  const add = (x, y) => {
+    if (Number.isFinite(x) && Number.isFinite(y)) points.push({ x, y });
+  };
+  for (const element of root.querySelectorAll('rect,circle,ellipse,line,path,polygon,polyline')) {
+    if (element.closest('defs')) continue;
+    const offset = translation(element, root);
+    const tag = element.tagName.toLowerCase();
+    if (tag === 'rect') {
+      const x = numberAttribute(element, 'x') + offset.x;
+      const y = numberAttribute(element, 'y') + offset.y;
+      add(x, y);
+      add(x + numberAttribute(element, 'width'), y + numberAttribute(element, 'height'));
+    } else if (tag === 'circle' || tag === 'ellipse') {
+      const cx = numberAttribute(element, 'cx') + offset.x;
+      const cy = numberAttribute(element, 'cy') + offset.y;
+      const rx = tag === 'circle' ? numberAttribute(element, 'r') : numberAttribute(element, 'rx');
+      const ry = tag === 'circle' ? rx : numberAttribute(element, 'ry');
+      add(cx - rx, cy - ry);
+      add(cx + rx, cy + ry);
+    } else if (tag === 'line') {
+      add(numberAttribute(element, 'x1') + offset.x, numberAttribute(element, 'y1') + offset.y);
+      add(numberAttribute(element, 'x2') + offset.x, numberAttribute(element, 'y2') + offset.y);
+    } else {
+      const values = (element.getAttribute(tag === 'path' ? 'd' : 'points') || '').match(/-?\d+(?:\.\d+)?/g) || [];
+      for (let index = 0; index + 1 < values.length; index += 2) {
+        add(Number.parseFloat(values[index]) + offset.x, Number.parseFloat(values[index + 1]) + offset.y);
+      }
+    }
+  }
+  if (!points.length) return { x: 0, y: 0, width: 100, height: 100 };
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return { x: minX, y: minY, width: Math.max(1, Math.max(...xs) - minX), height: Math.max(1, Math.max(...ys) - minY) };
+}
+
 dom.window.SVGElement.prototype.getBBox = function () {
-  const size = Number.parseFloat(this.getAttribute?.('font-size') || '14') || 14;
+  const tag = this.tagName.toLowerCase();
+  if (tag === 'svg') return geometryBox(this);
+  if (tag === 'rect') {
+    return {
+      x: numberAttribute(this, 'x'),
+      y: numberAttribute(this, 'y'),
+      width: numberAttribute(this, 'width'),
+      height: numberAttribute(this, 'height'),
+    };
+  }
+  const size = numberAttribute(this, 'font-size', 14);
   const text = (this.textContent || '').trim();
   return { x: 0, y: 0, width: Math.max(size, Array.from(text).length * size * 0.62), height: size * 1.25 };
 };

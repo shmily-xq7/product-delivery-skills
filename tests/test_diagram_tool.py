@@ -4,6 +4,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -59,6 +60,7 @@ class DiagramToolTests(unittest.TestCase):
         self.assertIn('role="img"', svg)
         self.assertIn("<title", svg)
         self.assertIn("<desc", svg)
+        self.assertLess(float(re.search(r"max-width: ([\d.]+)px", svg).group(1)), 2000)
         self.assertIn("<figure>", html)
         self.assertNotIn("<script src=", html)
         self.assertEqual(manifest["diagrams"][0]["source"]["diagram_index"], 0)
@@ -97,6 +99,7 @@ class DiagramToolTests(unittest.TestCase):
                     svg = diagram_tool.render_svg(name.upper(), name, name, source)
                     self.assertIn('role="img"', svg)
                     self.assertIn("<title", svg)
+                    self.assertLess(float(re.search(r"max-width: ([\d.]+)px", svg).group(1)), 5000)
 
 
 class ReleaseManifestTests(unittest.TestCase):
