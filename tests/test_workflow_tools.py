@@ -110,7 +110,8 @@ class InstallTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.source=Path(self.temp.name).resolve()/'source';self.source.mkdir();self.target=Path(self.temp.name).resolve()/'目标 with spaces'
-        (self.source/'release.json').write_text(json.dumps({'version':'test','base_commit':'base'}))
+        self.skill_names=['product-%02d'%n for n in range(11)]
+        (self.source/'release.json').write_text(json.dumps({'version':'test','base_commit':'base','skills':self.skill_names}))
         for n in range(11):
             name='product-%02d'%n;d=self.source/name;d.mkdir()
             (d/'SKILL.md').write_text('---\nname: %s\ndescription: test skill\n---\nold %d'%(name,n))
@@ -146,6 +147,9 @@ class InstallTests(unittest.TestCase):
         (self.source/'product-10').rename(self.source/'product-workflow')
         skill=self.source/'product-workflow/SKILL.md'
         skill.write_text(skill.read_text().replace('name: product-10','name: product-workflow'))
+        release=json.loads((self.source/'release.json').read_text())
+        release['skills'][-1]='product-workflow'
+        (self.source/'release.json').write_text(json.dumps(release))
         self.install()
         before=(self.target/'.product-delivery/manifest.json').read_bytes()
         validators=self.source/'product-workflow/validators';validators.mkdir()
@@ -161,6 +165,11 @@ class InstallTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'name 必须与目录名一致'):self.install()
         skill.write_text('---\nname: product-00\n---\nbody')
         with self.assertRaisesRegex(ValueError,'缺 description'):self.install()
+
+    def test_release_manifest_must_match_skill_directories(self):
+        extra=self.source/'product-extra';extra.mkdir()
+        (extra/'SKILL.md').write_text('---\nname: product-extra\ndescription: extra\n---\n')
+        with self.assertRaisesRegex(ValueError,'发行清单与技能目录不一致'):self.install()
 
     def test_client_aliases_multiple_targets_and_deduplication(self):
         home=Path(self.temp.name)/'home';home.mkdir()

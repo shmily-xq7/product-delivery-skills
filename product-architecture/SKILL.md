@@ -2,7 +2,7 @@
 name: product-architecture
 description: "产出《功能架构设计文档》——产品交付链路第二阶段。从产品设计文档推导总体技术方案：需求解读、用户故事、功能模块拆解、架构风格、前后端与数据库选型、Mermaid 系统架构图、开发规范（命名/API/迁移）、后端模块树、表定义与 ER 图、前端组件树、方案自检。触发词：功能架构设计、定架构、总体技术方案、技术选型、系统分层、模块拆解、架构图、ER 图、API 命名规范。不负责单模块的详细设计（那是模块详细设计）。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 
@@ -126,7 +126,8 @@ python3 scripts/validate_arch_doc.py \
 **外部依赖**（同族 skill）
 - `product-design` —— 上游输入 `00_产品设计文档.md`
 - `product-module-design` —— 下游消费者，会要求 API 契约与本文档严格一致
-- `product-workflow` —— 产物路径与阶段契约的定义处；**并承载跨阶段共享资源** `references/mermaid-guide.md`（阶段①的业务流程图、阶段③的泳道图、横向原型的流程示意都引用它。挂在任一阶段 skill 名下都会形成"上游依赖下游"）
+- `product-workflow` —— 产物路径与阶段契约的定义处；**并承载跨阶段共享资源** `references/mermaid-guide.md`（阶段①的业务流程图、阶段③的泳道图、横向原型与独立图表产物都引用它。挂在任一阶段 skill 名下都会形成"上游依赖下游"）
+- `product-diagram` —— 系统架构、部署、数据流或 ER 图需要独立 SVG / HTML、来源登记或陈旧检查时调用；权威源码仍留在本阶段文档
 
 ## 7. 与相邻阶段的边界
 

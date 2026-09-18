@@ -2,7 +2,7 @@
 name: product-development
 description: "按模块详细设计写代码——产品交付链路第四阶段（React 栈）。定义全族技术栈基线（单一事实源），提供 React 列表页 / 标签页的分步开发流程与可直接复制的整页模板（AntD + TS），覆盖前后端命名一致性、枚举单一事实源、后端 FastAPI 接口实现。触发词：按设计写代码、生成页面组件、React 列表页开发、标签页开发、对接 API、AntD 组件实现、前后端命名不一致。不负责写设计文档（那在前三个阶段）。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 

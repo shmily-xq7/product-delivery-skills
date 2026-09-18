@@ -2,7 +2,7 @@
 name: product-workflow
 description: "产品交付全流程编排器：串起『需求沟通⓪（访谈/澄清/用户确认 → 原始需求.md）→ 产品设计文档 → 功能架构设计文档 → 模块详细设计 → 代码开发 → E2E 测试 → 结项交付清单』八个环节，并定义产物目录契约、阶段检查（含⓪的用户人工确认）、失败回流、来源指纹（陈旧检测）、交付范围声明与结项判定。当用户说『开始一个产品设计项目/走完整流程/下一步该做什么/产物放哪个目录/该用哪份规范/阶段检查未通过怎么办/AC 验收标准怎么追溯/项目能不能交付/上游改了要不要重做/只做需求分析』时使用；兼容旧说法“门禁不过”。也用于回答『这套流程有哪些环节、每环节产出什么』。本 skill 只编排与路由，不产出设计文档正文。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 
@@ -40,7 +40,7 @@ metadata:
                      任一环节卡住 ──⑥ 诊断──▶ 诊断报告 ──▶ 回对应阶段
 
 横向支撑（任一阶段可调用）：
-  产品视觉口径 product-ui-spec   ·   线框/原型 product-prototype   ·   格式转换 product-doc-convert
+  产品视觉口径 product-ui-spec   ·   线框/原型 product-prototype   ·   交付图表 product-diagram   ·   格式转换 product-doc-convert
 ```
 
 | 序号 | 阶段 | 承担 skill | 核心产出 |
@@ -74,7 +74,8 @@ metadata:
 ├── frontend/
 │   ├── src/views/<ModuleName>/            ← ④ 前端产出（组件/页面文件 PascalCase）
 │   └── tests/e2e/<page-name>.spec.ts      ← ⑤ 产出（kebab-case）
-└── backend/app/                           ← ④ 后端产出（api/v1、services、models、schemas）
+├── backend/app/                           ← ④ 后端产出（api/v1、services、models、schemas）
+└── outputs/diagrams/                      ← 按需生成的图表副本、SVG、HTML 与来源清单
 ```
 
 **硬约定**
@@ -87,6 +88,7 @@ metadata:
 - **交付范围声明**（部分交付）：在 `原始需求.md` 顶部写一行 `交付范围：产品设计`（或 `设计到模块` / `全链`，**缺省全链**）。结项按声明裁剪——范围外阶段标「不在本次交付范围」、不计入就绪；范围外**产物若存在**会提示「超出范围」（不阻断，但提示核对声明是否过期）。**体检（陈旧检测）不受范围影响**：改了上游，范围外的下游照样告警。
 - `项目战略规划/` 与 `项目战术执行/` 是默认目录；自定义路径统一写入 `product-workflow.json`，**不要在各技能里分别改路径**——各阶段 skill 的产物约定与命令都按此路径书写。注：**校验脚本本身不依赖目录名**，它接受任意 `--doc` / `--spec-dir` 路径，只是流程中的调用示例按此约定书写。
 - **代码产物落目标工程**（`frontend/`、`backend/`），**不落** `项目战术执行/`。
+- **图表源码仍归阶段文档**；`product-diagram` 只把已确认的 Mermaid 块导出到 `outputs/diagrams/` 并登记来源。图表按条件生成，不增加固定阶段，也不替代阶段完成条件。
 - **每份设计类产物产出后必须盖章** —— 运行 `scripts/check_freshness.py --stamp <产物路径>` 写入「来源指纹」，否则无法判定它是否陈旧（协议见第 5 节）。
 
 ## 4. 阶段输入 / 输出契约
@@ -153,6 +155,7 @@ python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" --project-root
 | 上游改了、下游要不要重做、产物是不是陈旧 | 本 skill（`--project-root` 体检） |
 | 设计后台界面、设计系统、双主题、配色 token、表格/弹窗规范 | `product-ui-spec` |
 | 画 ASCII 线框、做静态 HTML 原型、复刻页面 | `product-prototype` |
+| 画流程/泳道/状态/架构/部署/数据流/ER/时序/依赖图，导出 SVG/HTML，检查图表是否陈旧 | `product-diagram` |
 | 文档转 md、表格做 docx、导出 excel | `product-doc-convert` |
 
 ## 7. 阶段边界（重要：避免职责重叠）
@@ -176,7 +179,7 @@ python3 "$SKILLS_DIR/product-workflow/scripts/check_freshness.py" --project-root
 | `scripts/build_snapshot.py` | 生成带来源哈希的自包含评审副本，不修改源文档 |
 | `scripts/run_checks.py` | 按独立 cwd 运行显式选定检查，完整日志落盘 |
 | `references/master-output-template.md` | 功能设计说明文档的**输出母版**（含输入变量、章节结构、ASCII 图规范、假设标注规则） |
-| `references/mermaid-guide.md` | **Mermaid 绘制规范与避错指南**（跨阶段共享 —— 阶段①②③的各类图与横向原型的流程示意都引用它，故归编排层而非任一阶段） |
+| `references/mermaid-guide.md` | **Mermaid 绘制规范与避错指南**（跨阶段共享 —— 阶段①②③的各类图、横向原型与独立图表产物都引用它，故归编排层而非任一阶段） |
 | `references/commands/01-产品设计.md` | 命令：生成/更新产品设计文档中指定页面（已修正规范路径） |
 | `references/commands/02-功能架构设计.md` | 命令：生成/更新功能架构设计文档 |
 | `references/commands/03-页面详细设计.md` | 命令：生成/更新指定页面的详细设计文档 |

@@ -2,7 +2,7 @@
 name: product-e2e-test
 description: "产出 Playwright + TypeScript 的端到端测试用例——产品交付链路第五阶段。含测试架构（文件结构/常量）、用例与 AC 验收标准的对应与覆盖校验、三层监控（控制台日志/网络请求/页面错误）、步骤执行标准（步骤分层+等待策略+元素定位）、用户交互模拟（表单填写/复杂交互）、三层数据验证（前端/API/DB）、错误处理（异常捕获/重试/兜底）、报告分析，并附可直接复制的用例模板。触发词：写 E2E、端到端测试、Playwright 用例、功能测试脚本、回归测试、测试失败排查、AC 覆盖检查、验收标准没测到。不负责单元测试与设计文档。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 
@@ -119,6 +119,7 @@ E2E 的价值不止"点通"，而在于**捕捉静默失败**。测试全程挂�
 - `product-development` —— 被测代码的技术栈与选择器约定
 - `product-design/references/product-design-spec.md` —— AC 编号规则的来源（见其第 6 节）
 - `product-diagnosis` —— 用例持续失败时移交诊断
+- `product-diagram` —— 需要面向评审者展示 AC 与当前执行结果的关系时生成测试覆盖关系图；不能从测试名称或注释推测通过
 
 **项目配置**：测试目录和扩展名由 `product-workflow.json` 统一指定；独立调用校验器时传入对应 `--spec-dir` / `--extensions`。依赖同族 workflow_config.py，共享文件发现逻辑，避免结项与单项检查统计不一致。
 

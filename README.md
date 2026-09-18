@@ -1,6 +1,6 @@
 # Product Delivery Skills
 
-一套可安装到多种 AI 编程/办公智能体的产品交付 Skills。它把需求澄清、产品设计、功能架构、模块详细设计、代码开发、E2E 测试、问题诊断和结项检查串成一条可追溯的工作流。
+一套可安装到多种 AI 编程/办公智能体的产品交付 Skills。它把需求澄清、产品设计、功能架构、模块详细设计、代码开发、E2E 测试、问题诊断和结项检查串成一条可追溯的工作流，并提供可追溯的交付图表能力。
 
 本项目采用开放的 Agent Skills 目录结构，不绑定单一客户端。目前安装器支持 Claude Code、Codex、WorkBuddy、千问办公、TRAE Work、TraeCode CLI 和 DSH，也支持任意自定义 Skills 目录。
 
@@ -43,10 +43,10 @@
                               │
                               └─ 遇到问题 → 只读诊断 → 回到对应阶段修复
 
-横向能力：UI 规范 · 页面原型 · 文档格式转换
+横向能力：UI 规范 · 页面原型 · 交付图表 · 文档格式转换
 ```
 
-仓库共包含 11 个 Skill：
+仓库共包含 12 个 Skill：
 
 | 类型 | Skill | 主要职责 | 主要产物或能力 |
 |---|---|---|---|
@@ -60,6 +60,7 @@
 | 阶段 ⑦ | `product-workflow` | 路由、编排、来源检查和结项判断 | `99_交付清单.md` |
 | 横向 | `product-ui-spec` | B 端界面、双主题 Token 和组件规范 | UI 设计规范 |
 | 横向 | `product-prototype` | ASCII 线框、单文件 HTML 原型和页面复刻 | 线框图或静态原型 |
+| 横向 | `product-diagram` | 按阶段绘图、导出 SVG/HTML、登记来源并检查陈旧状态 | Mermaid 源码、SVG、HTML 和来源清单 |
 | 横向 | `product-doc-convert` | DOCX、Markdown 和 Excel 格式转换 | 本地转换脚本 |
 
 ## 快速安装
@@ -168,13 +169,13 @@ bash install.sh --app codex --target /path/to/project/.agents/skills
 
 ### 生成客户端界面导入包
 
-部分客户端通过界面导入 ZIP。可以显式生成 11 个独立包：
+部分客户端通过界面导入 ZIP。可以显式生成 12 个独立包：
 
 ```bash
 bash install.sh --export-packages ./dist/client-import
 ```
 
-每个 ZIP 的根目录都有 `SKILL.md`。`product-workflow.zip` 会包含安装并自检过的 Mermaid 运行时。导入包只在用户指定的目录中生成，默认不生成，也不纳入源码仓库。
+每个 ZIP 的根目录都有 `SKILL.md`。`product-workflow.zip` 和 `product-diagram.zip` 都会包含各自安装并自检过的 Mermaid 运行时，因此可以单独导入。导入包只在用户指定的目录中生成，默认不生成，也不纳入源码仓库。
 
 ### 没有 Bash 的环境
 
@@ -240,6 +241,8 @@ bash install.sh --app codex
 为这个后台页面制定浅色和深色主题规范。
 把产品设计中的页面画成 ASCII 线框图。
 生成一个单文件 HTML 静态原型。
+把架构文档中的 Mermaid 图导出为 SVG 和本地 HTML，并登记来源。
+检查上游文档修改后哪些图表需要重新生成。
 把这份 DOCX 转成 Markdown。
 ```
 
@@ -289,6 +292,7 @@ bash install.sh --app codex
 │   ├── src/views/<ModuleName>/              # 阶段 ④
 │   └── tests/e2e/<page-name>.spec.ts        # 阶段 ⑤
 ├── backend/app/                              # 阶段 ④
+├── outputs/diagrams/                         # 按需：图表副本、SVG、HTML 与来源清单
 └── .product-workflow/                        # 问题台账和运行证据
 ```
 
@@ -397,6 +401,7 @@ product-delivery-skills/
 ├── product-diagnosis/                      # 阶段 ⑥：只读诊断
 ├── product-ui-spec/                        # 横向：UI 设计规范
 ├── product-prototype/                      # 横向：线框、原型和页面复刻
+├── product-diagram/                        # 横向：交付图表、导出和陈旧检查
 ├── product-doc-convert/                    # 横向：文档格式转换
 └── tests/                                  # 安装器与工作流工具测试
 ```
@@ -407,7 +412,7 @@ product-delivery-skills/
 - `scripts/`：校验或辅助脚本。
 - `assets/`：代码模板或参考工程。
 
-安装器要求发行包中恰好包含这 11 个 Skill，并校验每个目录的 YAML frontmatter、Skill 名称和描述。
+安装器以 `release.json` 的 `skills` 清单为准，并校验清单与实际目录完全一致，以及每个目录的 YAML frontmatter、Skill 名称和描述。
 
 ## 开发与维护
 
@@ -438,7 +443,7 @@ PLAYWRIGHT_CHANNEL=chrome npm test
 
 ### 安装器边界
 
-- `install.sh` 必须与 `scripts/install.py`、`release.json` 和 11 个 Skill 目录一起分发，不能只复制一个脚本完成安装。
+- `install.sh` 必须与 `scripts/install.py`、`release.json` 和清单声明的全部 Skill 目录一起分发，不能只复制一个脚本完成安装。
 - 安装时会忽略源码仓库中的 `node_modules`、`dist`、测试报告、Python 缓存和 `.DS_Store`。
 - 文档转换 Skill 的可选 Python 依赖不会随整体安装自动下载，应按其 [`SKILL.md`](product-doc-convert/SKILL.md) 在隔离环境中安装。
 - 目录规则可能随客户端版本、企业版、Profile 或沙箱环境变化；实际目录不一致时，使用对应环境变量或 `--target`，不必修改安装器源码。

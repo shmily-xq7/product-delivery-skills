@@ -2,7 +2,7 @@
 name: product-prototype
 description: "页面原型与复刻工具（跨阶段横向能力，与分析链路解耦）。三件事：① 生成 AntD 风格的 ASCII 界面线框图（字符规范、页面/表格/卡片/弹窗模板）；② 生成单文件 HTML + Bootstrap5 静态原型页（配色 CSS 变量、面包屑/标题/搜索区/表格/分页/导航栏规范）；③ 按「分析→实施→验证→检查清单」四阶段复刻既有页面。触发词：画 ASCII 界面、ASCII 线框、页面布局图、做静态 HTML 原型、复刻页面、还原设计稿、仿一个页面。不负责业务流程与字段定义。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 

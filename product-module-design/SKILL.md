@@ -2,7 +2,7 @@
 name: product-module-design
 description: "产出单模块的《〈序号〉_〈模块名〉详细设计.md》——产品交付链路第三阶段。把功能架构设计落地到具体模块：引用对应的产品设计来源章节、列出本模块覆盖的 AC 验收标准编号、前端详细设计（代码结构/组件表/状态管理/伪代码）、后端详细设计（代码结构/DDL/ER 图/API 契约表/伪代码）、测试详细设计（用例表含对应 AC 编号）。触发词：模块详细设计、页面详细设计、某模块的接口契约、数据模型细化、DDL、表结构设计、测试用例表、模块覆盖哪些 AC。不负责整系统架构（那是功能架构设计）。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 
@@ -127,6 +127,7 @@ python3 scripts/validate_module_doc.py \
 - `product-design` / `product-architecture` —— 上游输入
 - `product-development` —— 下游消费者
 - `product-e2e-test` —— 消费本文件的测试用例表
+- `product-diagram` —— 接口时序、状态、模块依赖或 ER 图需要独立 SVG / HTML、来源登记或陈旧检查时调用；权威源码仍留在本阶段文档
 
 ## 7. 常见失败模式
 

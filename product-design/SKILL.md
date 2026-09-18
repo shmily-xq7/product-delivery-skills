@@ -2,7 +2,7 @@
 name: product-design
 description: "产出《产品设计文档》——产品交付链路的第①阶段。覆盖前置子流程（需求说明 → 设计初始化大纲 → 功能清单拆解）与主体（业务流程 Mermaid、页面清单、每页/弹窗的基本信息、概述、数据流、ASCII 布局、字段字典、交互矩阵、验收标准 AC 编号、全局检查）。触发词：写产品设计、产品设计文档、写需求说明、设计初始化、拆功能清单、页面清单、字段字典、交互矩阵、验收标准、AC 编号、页面字段规格。输入是用户已确认的 原始需求.md；**确认前的需求访谈与澄清不负责（那是 product-requirement）**，技术选型与表结构也不负责（那是功能架构设计）。"
 metadata:
-  version: "1.3.1"
+  version: "1.4.0"
   agent_created: true
 ---
 
@@ -156,6 +156,7 @@ python3 scripts/validate_design_doc.py --doc <...> --json   # 机读
 - `product-requirement/references/expression-principles.md` —— 表达原则（结论先行 / 三步说清），归阶段⓪ 需求沟通名下（它是对用户沟通的方法论，本阶段 ②设计初始化成稿时同样遵守）
 - `product-workflow/references/mermaid-guide.md` —— 所有 Mermaid 图
 - `product-prototype/references/ascii-ui-generator.md` —— 所有 ASCII 布局图
+- `product-diagram` —— 业务流程、泳道、状态或页面导航关系需要独立 SVG / HTML、来源登记或陈旧检查时调用；权威源码仍留在本阶段文档
 - `product-ui-spec` —— 所有视觉规格（配色/字号/间距/组件）
 
 ## 结构检查补充

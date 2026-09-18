@@ -108,9 +108,26 @@ def inventory(directory):
 
 def validate_source(source):
     source = Path(source).resolve()
-    skills = sorted(p for p in source.glob("product-*") if p.is_dir())
-    if len(skills) != 11:
-        raise ValueError("完整发行包应包含 11 个技能")
+    release_path = source / "release.json"
+    if not release_path.is_file():
+        raise ValueError("完整发行包缺 release.json")
+    release = json.loads(release_path.read_text(encoding="utf-8"))
+    if not release.get("version"):
+        raise ValueError("release.json 缺 version")
+    declared = release.get("skills")
+    if (
+        not isinstance(declared, list)
+        or not declared
+        or any(not isinstance(name, str) or not re.fullmatch(r"product-[a-z0-9-]+", name) for name in declared)
+        or len(declared) != len(set(declared))
+    ):
+        raise ValueError("release.json 的 skills 必须是非空、无重复的产品技能名称列表")
+    actual = sorted(p.name for p in source.glob("product-*") if p.is_dir())
+    missing = sorted(set(declared) - set(actual))
+    extra = sorted(set(actual) - set(declared))
+    if missing or extra:
+        raise ValueError("发行清单与技能目录不一致：缺少 %s；未声明 %s" % (missing, extra))
+    skills = [source / name for name in declared]
     for skill in skills:
         skill_file = skill / "SKILL.md"
         if not skill_file.is_file():
@@ -125,12 +142,6 @@ def validate_source(source):
             raise ValueError("SKILL.md name 必须与目录名一致: %s" % skill.name)
         if not re.search(r"^description:\s*\S", frontmatter, re.MULTILINE):
             raise ValueError("SKILL.md 缺 description: %s" % skill.name)
-    release_path = source / "release.json"
-    if not release_path.is_file():
-        raise ValueError("完整发行包缺 release.json")
-    release = json.loads(release_path.read_text(encoding="utf-8"))
-    if not release.get("version"):
-        raise ValueError("release.json 缺 version")
     return source, skills, release
 
 
@@ -176,6 +187,29 @@ def stage_bundle(skills, stage):
         )
         if probe.returncode or json.loads(probe.stdout) != [{"ok": True}]:
             raise ValueError("Mermaid 运行时自检失败")
+        diagram_validators = stage / "product-diagram/validators"
+        if diagram_validators.is_dir():
+            shutil.copytree(validators / "node_modules", diagram_validators / "node_modules")
+            render_probe = subprocess.run(
+                ["node", "mermaid.mjs"],
+                cwd=diagram_validators,
+                input=json.dumps({
+                    "action": "render",
+                    "id": "install-probe",
+                    "title": "安装检查",
+                    "description": "检查图表运行时",
+                    "text": "graph TD\nA --> B",
+                }, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            try:
+                render_result = json.loads(render_probe.stdout)
+            except json.JSONDecodeError as error:
+                raise ValueError("图表渲染运行时返回异常") from error
+            if render_probe.returncode or not render_result.get("ok") or "<svg" not in render_result.get("svg", ""):
+                raise ValueError("图表渲染运行时自检失败")
     return contents
 
 
